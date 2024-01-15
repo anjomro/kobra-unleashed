@@ -8,7 +8,7 @@ export const state = reactive({
 });
 
 // Create a Socket.IO connection to the Python Socket.IO service
-const socket = io("http://127.0.0.1:5000"); // Replace with your Python Socket.IO service URL
+const socket = io(); // Replace with your Python Socket.IO service URL
 
 // Listen for the 'connect' event
 socket.on('connect', () => {

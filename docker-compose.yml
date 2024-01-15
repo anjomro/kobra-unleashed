@@ -1,0 +1,15 @@
+version: "3"
+services:
+    kobra-unleashed:
+        ports:
+            - 5000:5000
+        volumes:
+            - ./certs:/app/certs
+        restart: always
+        image: anjomro/kobra-unleashed
+        build:
+            context: .
+        environment:
+          - MQTT_HOST=my-mqtt-server.example.com
+          - MQTT_PORT=8883
+        container_name: kobra-unleashed
