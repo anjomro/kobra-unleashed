@@ -1,0 +1,6 @@
+.idea
+uploads
+certs
+kobra-client/node_modules
+kobra-client/dist
+kobra-client/.vscode
