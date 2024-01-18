@@ -118,7 +118,7 @@ export default {
         formData.append('file', this.selectedFile);
         formData.append('printer_id', this.printer.id);
         try {
-          const response = await axios.post('http://0.0.0.0:5000/api/print', formData);
+          const response = await axios.post('/api/print', formData);
           console.log('File uploaded:', response.data);
           this.selectedFile = null;
         } catch (error) {
@@ -148,7 +148,7 @@ export default {
     },
     async fetchFiles() {
       try {
-        const response = await axios.get(`http://0.0.0.0:5000/api/printer/${this.printer.id}/files`);
+        const response = await axios.get(`/api/printer/${this.printer.id}/files`);
         console.log(response.data);
       } catch (error) {
         console.error('Error fetching files:', error);
