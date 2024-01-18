@@ -51,7 +51,7 @@ webinterface are the result of reverse engineering.
       - `mqtt.anycubic.com`
   - Select a hostname that has exactly the same length as the original one
     - You could use [sslip.io](https://sslip.io/) to get a name for your IP
-    - Attention: 
+    - Attention: Your router might have `rebind protection` which prevents it from resolving external hostnames to local IPs. 
     - Example:
       - `mqtt-universe.anycubic.com` - 26 characters
       - `paddi.192.168.0.1.sslip.io` - 26 characters
