@@ -1,15 +1,33 @@
 version: "3"
 services:
-    kobra-unleashed:
-        ports:
-            - 5000:5000
-        volumes:
-            - ./certs:/app/certs
-        restart: always
-        image: anjomro/kobra-unleashed
-        build:
-            context: .
-        environment:
-          - MQTT_HOST=my-mqtt-server.example.com
-          - MQTT_PORT=8883
-        container_name: kobra-unleashed
+  kobra-unleashed:
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./certs:/app/certs
+    restart: always
+    image: anjomro/kobra-unleashed
+    build:
+      context: .
+    environment:
+      - MQTT_HOST=eclipse-mosquitto
+      - MQTT_PORT=8883
+      - CORS_HOST=http://0.0.0.0:5000 # replace with your host
+    container_name: kobra-unleashed
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    depends_on:
+        eclipse-mosquitto:
+            condition: service_started
+  eclipse-mosquitto:
+    stdin_open: true
+    tty: true
+    ports:
+      - "8883:8883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./certs/:/certs/
+    image: eclipse-mosquitto
