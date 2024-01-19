@@ -12,7 +12,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-EXPOSE 8000
+EXPOSE 5000
 
 # Copy project
 COPY Pipfile Pipfile.lock main.py /app/
@@ -27,4 +27,4 @@ RUN pip install pipenv && \
 
 
 
-CMD gunicorn --bind :5000 --worker-class eventlet --workers 2 'main:app'
+CMD gunicorn --bind :5000 --worker-class eventlet --workers 1 'main:app'
