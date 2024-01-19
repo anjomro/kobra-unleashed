@@ -55,8 +55,10 @@ webinterface are the result of reverse engineering.
     - Example:
       - `mqtt-universe.anycubic.com` - 26 characters
       - `paddi.192.168.0.1.sslip.io` - 26 characters
-  - Replace the address in the app binary
-    - `< /app/app sed 's/mqtt-universe.anycubic.com/paddi.192.168.0.1.sslip.io/g' > /app/app`
+  - Replace the address in the app binary & replace stock app
+    - `< /app/app sed 's/mqtt-universe.anycubic.com/paddi.192.168.0.1.sslip.io/g' > /app/mod_app`
+    - `chmod 755 /app/mod_app`
+    - `mv /app/mod_app /app/app`
 - Reboot the printer for the changes to take effect
   - `reboot`
 
