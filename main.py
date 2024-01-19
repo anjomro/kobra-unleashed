@@ -33,14 +33,11 @@ app.config['MQTT_TLS_CA_CERTS'] = os.getenv("MQTT_CA", "/app/certs/ca.pem")
 app.config['MQTT_TLS_CERTFILE'] = os.getenv("MQTT_CERT", "/app/certs/client.pem")
 app.config['MQTT_TLS_KEYFILE'] = os.getenv("MQTT_KEY", "/app/certs/client.key")
 app.config['MQTT_TLS_INSECURE'] = True
-CORS_HOST = os.getenv("CORS_HOST", "http://127.0.0.1:5000")
+#CORS_HOST = os.getenv("CORS_HOST", "http://127.0.0.1:5000")
 
 mqtt = Mqtt(app, mqtt_logging=True)
 socketio = SocketIO(app, logger=True, engineio_logger=True,
-                    cors_allowed_origins=["http://127.0.0.1:5000", "http://localhost:5173", CORS_HOST])
-
-CORS(app,
-     origins=["http://127.0.0.1:5000", "http://localhost:5173", CORS_HOST])
+                    cors_allowed_origins=[])
 
 received_messages = []
 printer_list: Dict[str, "Printer"] = {}
