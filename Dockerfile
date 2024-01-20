@@ -27,4 +27,4 @@ RUN pip install pipenv && \
 
 
 
-CMD gunicorn --bind :5000 --worker-class eventlet --workers 1 'main:app'
+CMD python main.py

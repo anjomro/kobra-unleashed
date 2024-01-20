@@ -9,12 +9,15 @@ from pathlib import Path
 from typing import Dict, Union, List
 import json
 
+import eventlet
+
 import json
 from flask import Flask, render_template, send_from_directory, request
-from flask_mqtt import Mqtt
+import paho.mqtt.client as mqtt
 from flask_socketio import SocketIO, emit
-from flask_cors import CORS
 from werkzeug.utils import secure_filename
+
+eventlet.monkey_patch(all=False, socket=True)
 
 app = Flask(__name__)
 
@@ -25,7 +28,7 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['MQTT_BROKER_URL'] = os.getenv("MQTT_HOST")
 app.config['MQTT_BROKER_PORT'] = int(os.getenv("MQTT_PORT", 8883))
-app.config['MQTT_CLIENT_ID'] = f'python-mqtt-{random.randint(0, 1000)}'
+app.config['MQTT_CLIENT_ID'] = f'kobra-unleashed-{random.randint(0, 1000)}'
 app.config['MQTT_REFRESH_TIME'] = 0.5  # refresh time in seconds
 app.config['MQTT_TLS_ENABLED'] = True  # set TLS to enabled for MQTT
 app.config['MQTT_TLS_VERSION'] = ssl.PROTOCOL_TLSv1_2
@@ -33,14 +36,15 @@ app.config['MQTT_TLS_CA_CERTS'] = os.getenv("MQTT_CA", "/app/certs/ca.pem")
 app.config['MQTT_TLS_CERTFILE'] = os.getenv("MQTT_CERT", "/app/certs/client.pem")
 app.config['MQTT_TLS_KEYFILE'] = os.getenv("MQTT_KEY", "/app/certs/client.key")
 app.config['MQTT_TLS_INSECURE'] = True
-#CORS_HOST = os.getenv("CORS_HOST", "http://127.0.0.1:5000")
+# CORS_HOST = os.getenv("CORS_HOST", "http://127.0.0.1:5000")
 
-mqtt = Mqtt(app, mqtt_logging=True)
-socketio = SocketIO(app, logger=True, engineio_logger=True,
-                    cors_allowed_origins=[])
 
 received_messages = []
 printer_list: Dict[str, "Printer"] = {}
+
+socketio = SocketIO(app, logger=True, engineio_logger=True,
+                    cors_allowed_origins=[])
+client = mqtt.Client()
 
 
 class PrintJob:
@@ -113,7 +117,8 @@ class Printer:
         payload["timestamp"] = int(datetime.datetime.now().timestamp() * 1000)
         payload["type"] = cmd_type
         payload["action"] = action
-        mqtt.publish(self.get_command_topic(cmd_type, action), json.dumps(payload).replace('/', r'\/').encode("utf-8"))
+        client.publish(self.get_command_topic(cmd_type, action),
+                       json.dumps(payload).replace('/', r'\/').encode("utf-8"))
 
     def get_files(self, local: bool = True):
         action = "listLocal" if local else "listUdisk"
@@ -258,7 +263,6 @@ def print_message(printer: Printer, payload):
     print(f"Printjob: ------ {printer.print_job.__dict__}")
 
 
-@mqtt.on_message()
 def parse_message(mqtt_client, userdata, message):
     topic = message.topic
     payload = message.payload.decode()
@@ -318,11 +322,6 @@ def parse_message(mqtt_client, userdata, message):
         print(f"Printer {printer_id} updated to {this_printer.serialized()}")
         socketio.emit("printer_updated", {"id": printer_id, "printer": this_printer.serialized()})
     print(f"Received message: {type}/{action}")
-
-
-@mqtt.on_connect()
-def configure_mqtt(client, userdata, flags, rc):
-    mqtt.subscribe("anycubic/#")
 
 
 @app.route('/')
@@ -445,6 +444,36 @@ def uploaded_file(filename):
                                filename)
 
 
-if __name__ == '__main__':
-    mqtt.client.subscribe("anycubic/#")
+def configure_mqtt(mqtt_client, userdata, flags, rc):
+    mqtt_client.subscribe("anycubic/#")
+    print(f"##### Connected to MQTT Server {app.config['MQTT_BROKER_URL']}:{app.config['MQTT_BROKER_PORT']}")
+
+
+def initialize_mqtt():
+    client.reinitialise(app.config['MQTT_CLIENT_ID'], clean_session=True)
+    client.on_connect = configure_mqtt
+    client.on_message = parse_message
+    client.tls_set(
+        ca_certs=app.config['MQTT_TLS_CA_CERTS'],
+        certfile=app.config['MQTT_TLS_CERTFILE'],
+        keyfile=app.config['MQTT_TLS_KEYFILE'],
+        tls_version=app.config['MQTT_TLS_VERSION'],
+        ciphers=None
+    )
+    client.tls_insecure_set(app.config['MQTT_TLS_INSECURE'])
+    client.connect(app.config['MQTT_BROKER_URL'], app.config['MQTT_BROKER_PORT'], keepalive=60)
+
+    print("Starting MQTT Client")
+    client.loop_start()
+
+
+def initialize_socketio_server():
+    print("Starting Flask SocketIO")
     socketio.run(app, host='0.0.0.0', port=5000, use_reloader=False, debug=True)
+
+
+if __name__ == '__main__':
+    initialize_mqtt()
+    initialize_socketio_server()
+else:
+    initialize_mqtt()
