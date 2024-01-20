@@ -24,6 +24,7 @@
 <script>
 export default {
   props: ['printer'],
+  emits: ['set-printer-name'],
   data() {
     return {
       newPrinterName: '',
