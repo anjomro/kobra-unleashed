@@ -101,7 +101,7 @@ export default {
       console.log('Printer state changed: ', data);
       this.updatePrinter(data);
 
-      if (this.selectedPrinterId === null) {
+      if (this.selectedPrinterId === undefined || this.selectedPrinterId === null) {
         this.selectedPrinterId = data.id;
         this.selectPrinterId();
       }
@@ -110,7 +110,7 @@ export default {
       this.printers = data;
       console.log('Printer list:', data);
 
-      if (this.selectedPrinterId === null) {
+      if (this.selectedPrinterId === undefined || this.selectedPrinterId === null) {
         this.selectedPrinterId = Object.keys(data)[0];
         this.selectPrinterId();
       }

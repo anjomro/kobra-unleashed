@@ -19,14 +19,14 @@
 
     </div>
     <div class="card-body">
+      <progress v-if="isPrinting()" class="progress progress-accent" :value="printer.print_job.progress" max="100"></progress>
       <div v-if="isPrinting() || isPaused()" class="card card-bordered card-compact w-1/2">
-
         <div class="overflow-x-auto">
           <table class="table">
             <tbody>
             <tr>
               <th>File</th>
-              <td>{{ printer.print_job.file }}</td>
+              <td>{{ printer.print_job.filename }}</td>
             </tr>
             <tr>
               <th>Progress</th>
@@ -61,8 +61,7 @@
 
           <button @click="selectFile" class="btn btn-primary join-item">Select File</button>
 
-          <button v-if="!selectedFile" @click="upload_and_print" class="btn btn-primary join-item">Upload/Print</button>
-          <div v-else class="tooltip tooltip-open tooltip-top"
+          <div v-if="selectedFile" class="tooltip tooltip-open tooltip-top"
                v-bind:data-tip="selectedFile.name">
             <button @click="upload_and_print" class="btn btn-primary join-item tooltip-open">Upload/Print</button>
           </div>
@@ -95,7 +94,7 @@ export default {
     printSpeedMode() {
       // Return the print speed mode in human readable format
       let speed_mode = {
-        1: "Unknown",
+        0: "Unknown",
         1: "Slow",
         2: "Normal",
         3: "Fast",
@@ -146,9 +145,16 @@ export default {
     stopPrint() {
       socket.emit('stop_print', {"id": this.printer.id});
     },
+    requestStatus() {
+      socket.emit('get_printer_list');
+    },
     async fetchFiles() {
+      let url = `/api/printer/${this.printer.id}/files`;
+      if(import.meta.env.DEV){
+        url = `http://localhost:5000${url}`;
+      }
       try {
-        const response = await axios.get(`/api/printer/${this.printer.id}/files`);
+        const response = await axios.get(url);
         console.log(response.data);
       } catch (error) {
         console.error('Error fetching files:', error);
