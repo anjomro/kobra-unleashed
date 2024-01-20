@@ -43,7 +43,7 @@ received_messages = []
 printer_list: Dict[str, "Printer"] = {}
 
 socketio = SocketIO(app, logger=True, engineio_logger=True,
-                    cors_allowed_origins=[])
+                    cors_allowed_origins="*")
 client = mqtt.Client()
 
 
