@@ -8,6 +8,7 @@ paho-mqtt = "*"
 flask = "*"
 flask-socketio = "*"
 eventlet = "*"
+gunicorn = "*"
 
 [dev-packages]
 
