@@ -7,9 +7,6 @@ name = "pypi"
 paho-mqtt = "*"
 flask = "*"
 flask-socketio = "*"
-flask-cors = "*"
-flask-mqtt = "*"
-gunicorn = "*"
 eventlet = "*"
 
 [dev-packages]
