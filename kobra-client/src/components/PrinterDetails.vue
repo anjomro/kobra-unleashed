@@ -33,24 +33,12 @@
               <td>{{ printer.print_job.progress }}%</td>
             </tr>
             <tr>
-              <th>Layers</th>
-              <td>{{ printer.print_job.curr_layer }}/{{ printer.print_job.total_layers }}</td>
-            </tr>
-            <tr>
               <th>Print Time</th>
               <td>{{ printer.print_job.print_time.toFixed(2) }} min</td>
             </tr>
             <tr>
-              <th>Time Remaining</th>
-              <td>{{ printer.print_job.remaining_time.toFixed(2) }} min</td>
-            </tr>
-            <tr>
               <th>Material Used</th>
               <td>{{ printer.print_job.supplies_usage.toFixed(2) }} mm</td>
-            </tr>
-            <tr>
-              <th>Print Speed</th>
-              <td>{{ printSpeedMode() }}</td>
             </tr>
             </tbody>
           </table>
