@@ -115,7 +115,7 @@ export default {
     },
     isPrinting() {
       // return true if status one of: "busy", "printing", "preheating"
-      return ["busy", "printing", "preheating", "paused"].includes(this.printer.state);
+      return ["busy", "printing", "preheating", "paused"].includes(this.printer.state) && ("print_job" in this.printer);
     },
     isPaused() {
       // return true if status one of: "paused"
