@@ -19,7 +19,7 @@
 
     </div>
     <div class="card-body">
-      <progress v-if="isPrinting()" class="progress progress-accent" :value="printer.print_job.progress" max="100"></progress>
+      <progress v-if="isPrinting()" class="progress progress-primary" :value="printer.print_job.progress" max="100"></progress>
       <div v-if="isPrinting() || isPaused()" class="card card-bordered card-compact w-1/2">
         <div class="overflow-x-auto">
           <table class="table">
