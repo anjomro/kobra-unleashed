@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #One line
-details="-subj /C=US/ST=CA/L=SanFrancisco/O=GlobalSecurity/OU=IT/CN=example.com"
+details="-subj /C=US/ST=CA/L=SanFrancisco/O=GlobalSecurity/OU=IT/CN=0.0.0.0"
 
 openssl genrsa -out ca.key 2048
 openssl req -new -x509 -days 3650 -key ca.key -out ca.crt $details
