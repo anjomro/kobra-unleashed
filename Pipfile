@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-paho-mqtt = "*"
+paho-mqtt = "1.6.1"
 flask = "*"
 flask-socketio = "*"
 eventlet = "*"
