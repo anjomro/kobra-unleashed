@@ -13,4 +13,9 @@ openssl genrsa -out client.key 2048
 openssl req -new -out client.csr -key client.key -subj "/C=US/ST=CA/L=San Francisco/O=My Company/CN=client"
 openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 3650
 
-scp ca.crt server.crt server.key client.crt client.key root@10.0.2.249:/user
+# Add hardlinks to make it work with mosquitto
+ln server.key verification_cert.key
+ln server.pem verification_cert.pem
+
+
+echo "Please copy ca.crt server.crt server.key client.crt client.key to your printer under /user/"
