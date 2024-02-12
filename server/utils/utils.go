@@ -9,3 +9,7 @@ func GetEnv(key string, fallback string) string {
 	}
 	return value
 }
+
+func GetPrinterID() string {
+	return GetEnv("PRINTER_ID", "printer")
+}

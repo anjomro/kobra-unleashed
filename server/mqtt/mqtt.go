@@ -3,11 +3,16 @@ package mqtt
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/anjomro/kobra-unleashed/server/utils"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 )
 
 func NewTLSConfig() *tls.Config {
@@ -75,4 +80,79 @@ func GetMQTTClient() *MQTT.Client {
 
 	}
 	return MQTTClient
+}
+
+func getCommandTopic(cmdType string, action string) string {
+	// Returns the topic where a command should be published
+	return fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/20021/%s/%s/%s", utils.GetPrinterID(), cmdType, action)
+}
+
+func SendCommand(cmdType string, action string, payload map[string]interface{}) {
+	// Generate a UUID
+	msgID := uuid.New().String()
+
+	// Get the current timestamp in milliseconds
+	timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+
+	// Add the msgid, timestamp, type, and action to the payload
+	payload["msgid"] = msgID
+	payload["timestamp"] = timestamp
+	payload["type"] = cmdType
+	payload["action"] = action
+
+	// Convert the payload to JSON
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		panic(err)
+	}
+
+	// Replace all occurrences of / with \/
+	payloadStr := string(payloadBytes)
+	payloadStr = strings.ReplaceAll(payloadStr, "/", "\\/")
+
+	client := *GetMQTTClient()
+	// Publish the message to the MQTT topic
+	topic := getCommandTopic(cmdType, action)
+	token := client.Publish(topic, 0, false, payloadStr)
+	token.Wait()
+}
+
+func Print(filename string, filePath string) {
+	// Seed the random number generator
+	rand.Seed(time.Now().UnixNano())
+
+	// Generate a random task id
+	taskID := rand.Intn(1000000)
+
+	// Create the data payload
+	data := map[string]interface{}{
+		"filename":  filename,
+		"filepath":  filePath,
+		"taskid":    taskID,
+		"task_mode": 1,
+		"filetype":  1,
+	}
+
+	// Create the payload for the command
+	payload := map[string]interface{}{
+		"data": data,
+	}
+
+	// Send the command
+	SendCommand("print", "start", payload)
+}
+
+func SendPrintAction(taskID string, action string) {
+	// Create the data payload
+	data := map[string]interface{}{
+		"taskid": taskID,
+	}
+
+	// Create the payload for the command
+	payload := map[string]interface{}{
+		"data": data,
+	}
+
+	// Send the command
+	SendCommand("print", action, payload)
 }
