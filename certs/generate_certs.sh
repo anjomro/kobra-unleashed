@@ -15,7 +15,7 @@ openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out c
 
 # Add hardlinks to make it work with mosquitto
 ln server.key verification_cert.key
-ln server.pem verification_cert.pem
+ln server.crt verification_cert.pem
 ln ca.crt ca.pem
 
 
