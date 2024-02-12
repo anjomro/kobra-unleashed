@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/anjomro/kobra-unleashed/server/middleware"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -9,5 +10,5 @@ func SetupRoutes(app *fiber.App) {
 	router := app.Group("/api")
 
 	// /api/
-	router.Get("/", indexHandler)
+	router.Get("/", middleware.AuthHandler, indexHandler)
 }
