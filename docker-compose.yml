@@ -7,9 +7,7 @@ services:
       - ./certs:/app/certs
       - ./uploads:/app/uploads
     restart: always
-    image: anjomro/kobra-unleashed
-    build:
-      context: .
+    image: ghcr.io/anjomro/kobra-unleashed:master
     environment:
       - MQTT_HOST=eclipse-mosquitto
       - MQTT_PORT=8883
