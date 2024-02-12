@@ -17,6 +17,7 @@ openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out c
 ln server.key verification_cert.key
 ln server.crt verification_cert.pem
 ln ca.crt ca.pem
+ln client.crt client.pem
 
 
 echo "Please copy ca.crt server.crt server.key client.crt client.key to your printer under /user/"
