@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
+
+	"github.com/anjomro/kobra-unleashed/server/structs"
 )
 
 func GetEnv(key string, fallback string) string {
@@ -40,4 +43,55 @@ func CreateAPIKey() string {
 
 	// Convert bytes to hex string.
 	return fmt.Sprintf("%x", b)
+}
+
+func WriteSettings(settings *structs.Settings) {
+
+	filename := "./settings.json"
+	if IsDev() {
+		filename = "./settings.json"
+	} else {
+		filename = "/user/settings.json"
+	}
+
+	// Create settings.json
+	file, err := os.Create(filename)
+	if err != nil {
+		slog.Error("Error creating settings.json", err)
+	}
+	defer file.Close()
+
+	// Marshal settings to json
+	settingsJSON, err := json.Marshal(settings)
+	if err != nil {
+		slog.Error("Error marshalling settings to json", err)
+	}
+
+	// Write settings to settings.json
+	_, err = file.Write(settingsJSON)
+	if err != nil {
+		slog.Error("Error writing settings to settings.json", err)
+	}
+}
+func CheckSetup() {
+	// Check if settings.json exists
+	filename := "./settings.json"
+	if IsDev() {
+		filename = "./settings.json"
+	} else {
+		filename = "/user/settings.json"
+	}
+
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		slog.Info("settings.json does not exist. Creating new settings.json")
+		// Create new settings.json with a new API key
+		settings := new(structs.Settings)
+
+		// Create new API key
+		settings.APIKey = CreateAPIKey()
+
+		// Write settings to settings.json
+		WriteSettings(settings)
+	}
 }
