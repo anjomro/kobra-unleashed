@@ -16,6 +16,7 @@ openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out c
 # Add hardlinks to make it work with mosquitto
 ln server.key verification_cert.key
 ln server.pem verification_cert.pem
+ln ca.crt ca.pem
 
 
 echo "Please copy ca.crt server.crt server.key client.crt client.key to your printer under /user/"
