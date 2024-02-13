@@ -22,8 +22,8 @@ func GetPrinterID() string {
 }
 
 func IsDev() bool {
-	// If APP_ENV is not set, default to "dev"
-	return GetEnv("APP_ENV", "dev") == "dev"
+	// If APP_ENV is not set, default to "prod"
+	return GetEnv("APP_ENV", "prod") == "dev"
 }
 
 func CreateAPIKey() string {
