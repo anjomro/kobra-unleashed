@@ -1,4 +1,4 @@
-package anyprinter
+package kobraprinter
 
 import "fmt"
 

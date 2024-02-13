@@ -3,7 +3,7 @@ package routes
 import (
 	"log/slog"
 
-	"github.com/anjomro/kobra-unleashed/server/anyprinter"
+	"github.com/anjomro/kobra-unleashed/server/kobraprinter"
 	"github.com/anjomro/kobra-unleashed/server/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -72,7 +72,7 @@ func uploadFileHandler(ctx *fiber.Ctx, savePath string) error {
 	// Print the file
 	if shouldPrint {
 		// Print the file
-		anyprinter.Print()
+		kobraprinter.Print()
 	}
 
 	// Set headers
