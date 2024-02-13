@@ -3,6 +3,7 @@ package routes
 import (
 	"log/slog"
 
+	"github.com/anjomro/kobra-unleashed/server/anyprinter"
 	"github.com/anjomro/kobra-unleashed/server/utils"
 	"github.com/gofiber/fiber/v2"
 )
@@ -44,6 +45,8 @@ func uploadFileHandler(ctx *fiber.Ctx, savePath string) error {
 		return err
 	}
 
+	shouldPrint := ctx.FormValue("print") == "true"
+
 	// Check if UDISK or exUDISK
 	if utils.IsDev() {
 		// Check if the file is being uploaded to /mnt/UDISK or /mnt/exUDISK
@@ -64,6 +67,12 @@ func uploadFileHandler(ctx *fiber.Ctx, savePath string) error {
 		return ctx.Status(500).JSON(fiber.Map{
 			"error": "Error saving file",
 		})
+	}
+
+	// Print the file
+	if shouldPrint {
+		// Print the file
+		anyprinter.Print()
 	}
 
 	// Set headers
