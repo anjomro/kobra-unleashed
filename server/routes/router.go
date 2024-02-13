@@ -7,14 +7,14 @@ import (
 
 func SetupRoutes(app *fiber.App) {
 	// Create a router with base path /api
-	router := app.Group("/api")
+	router := app.Group("/api").Use(middleware.AuthHandler)
 	filehandler := router.Group("/files")
 
 	// /api/
-	router.Get("/", middleware.AuthHandler, indexHandler)
-	router.Get("/version", middleware.AuthHandler, versionHandler)
+	router.Get("/", indexHandler)
+	router.Get("/version", versionHandler)
 
 	// /api/files/
-	filehandler.Post("/local", middleware.AuthHandler, localFilesHandlerPOST)
-	filehandler.Post("/sdcard", middleware.AuthHandler, sdcardFilesHandlerPOST)
+	filehandler.Post("/local", localFilesHandlerPOST)
+	filehandler.Post("/sdcard", sdcardFilesHandlerPOST)
 }
