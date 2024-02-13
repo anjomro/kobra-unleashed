@@ -2,6 +2,8 @@ package main
 
 import (
 	"log/slog"
+	"os"
+	"runtime"
 
 	"github.com/anjomro/kobra-unleashed/server/routes"
 	"github.com/anjomro/kobra-unleashed/server/utils"
@@ -10,6 +12,13 @@ import (
 )
 
 func main() {
+
+	// Crash if not linux
+	if runtime.GOOS != "linux" {
+		slog.Error("This program is only supported on Linux")
+		os.Exit(1)
+	}
+
 	err := godotenv.Load()
 	if err != nil {
 		slog.Error("Error loading .env file", err)
