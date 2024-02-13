@@ -237,22 +237,27 @@ func sdcardFilesHandlerGET(ctx *fiber.Ctx) error {
 	return ctx.JSON(files)
 }
 
-func localFilesHandlerPOST(ctx *fiber.Ctx) error {
-	// Upload a file to /mnt/UDISK
+func uploadFileHandler(ctx *fiber.Ctx, savePath string) error {
 	// Get multipart form-data
-
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		return err
 	}
 
-	// Save the file to /mnt/UDISK
-	filename := "dev/UDISK/" + file.Filename
-
+	// Check if UDISK or exUDISK
 	if utils.IsDev() {
-		filename = "dev/sdcard/" + file.Filename
+		// Check if the file is being uploaded to /mnt/UDISK or /mnt/exUDISK
+		if savePath == "/mnt/UDISK/" {
+			savePath = "dev/sdcard/"
+		}
+		if savePath == "/mnt/exUDISK/" {
+			savePath = "dev/uploads/"
+		}
 	}
 
+	filename := savePath + file.Filename
+
+	// Save the file
 	err = ctx.SaveFile(file, filename)
 	if err != nil {
 		slog.Error("Error saving file", err)
@@ -260,6 +265,7 @@ func localFilesHandlerPOST(ctx *fiber.Ctx) error {
 			"error": "Error saving file",
 		})
 	}
+
 	// Set headers
 	ctx.Set("Location", filename)
 	return ctx.Status(201).JSON(fiber.Map{
@@ -267,35 +273,10 @@ func localFilesHandlerPOST(ctx *fiber.Ctx) error {
 	})
 }
 
+func localFilesHandlerPOST(ctx *fiber.Ctx) error {
+	return uploadFileHandler(ctx, "/mnt/UDISK/")
+}
+
 func sdcardFilesHandlerPOST(ctx *fiber.Ctx) error {
-	// Upload a file to /mnt/exUDISK
-	// Get multipart form-data
-
-	file, err := ctx.FormFile("file")
-	if err != nil {
-		return err
-	}
-
-	// Save the file to /mnt/exUDISK
-
-	filename := "dev/exUDISK/" + file.Filename
-
-	if utils.IsDev() {
-		filename = "dev/uploads/" + filename
-	} else {
-		filename = "/mnt/exUDISK/" + filename
-	}
-
-	err = ctx.SaveFile(file, filename)
-	if err != nil {
-		slog.Error("Error saving file", err)
-		return ctx.Status(500).JSON(fiber.Map{
-			"error": "Error saving file",
-		})
-	}
-	// Set headers
-	ctx.Set("Location", filename)
-	return ctx.Status(201).JSON(fiber.Map{
-		"message": "File uploaded",
-	})
+	return uploadFileHandler(ctx, "/mnt/exUDISK/")
 }
