@@ -21,7 +21,14 @@ func main() {
 
 	app := fiber.New()
 
+	app.Use(func(c *fiber.Ctx) error {
+		slog.Info("Request:", c.Method(), c.Path())
+		return c.Next()
+	})
+
 	routes.SetupRoutes(app)
+
+	// Setup a middleware that prints the request method and path and all that is requested
 
 	app.Listen(":" + appPort)
 }

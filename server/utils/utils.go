@@ -47,11 +47,9 @@ func CreateAPIKey() string {
 
 func WriteSettings(settings *structs.Settings) {
 
-	filename := "./settings.json"
+	filename := "/user/settings.json"
 	if IsDev() {
 		filename = "./settings.json"
-	} else {
-		filename = "/user/settings.json"
 	}
 
 	// Create settings.json
@@ -75,11 +73,9 @@ func WriteSettings(settings *structs.Settings) {
 }
 func CheckSetup() {
 	// Check if settings.json exists
-	filename := "./settings.json"
+	filename := "/user/settings.json"
 	if IsDev() {
 		filename = "./settings.json"
-	} else {
-		filename = "/user/settings.json"
 	}
 
 	_, err := os.Stat(filename)
