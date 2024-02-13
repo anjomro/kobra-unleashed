@@ -40,19 +40,21 @@ type File struct {
 }
 
 // /api/files/local
-func localFilesHandlerGET(ctx *fiber.Ctx) error {
-	// Get all .gcode files in /mnt/UDISK. Enumerate all files in the directory and return the ones that end with .gcode
-
-	// Get all files in /mnt/UDISK
-	sdcardDir := "/mnt/UDISK"
+func getFilesHandler(ctx *fiber.Ctx, baseDir string) error {
 
 	if utils.IsDev() {
-		sdcardDir = "dev/sdcard"
+		// Check if the file is being uploaded to /mnt/UDISK or /mnt/exUDISK
+		if baseDir == "/mnt/UDISK/" {
+			baseDir = "dev/sdcard/"
+		}
+		if baseDir == "/mnt/exUDISK/" {
+			baseDir = "dev/uploads/"
+		}
 	}
 
-	// Get all files in /mnt/UDISK and /mnt/exUDISK
+	// Get all files in the specified base directory
 	files := []File{}
-	err := filepath.Walk(sdcardDir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -138,103 +140,12 @@ func localFilesHandlerGET(ctx *fiber.Ctx) error {
 	return ctx.JSON(files)
 }
 
-// /api/files/sdcard
+func localFilesHandlerGET(ctx *fiber.Ctx) error {
+	return getFilesHandler(ctx, "/mnt/UDISK")
+}
+
 func sdcardFilesHandlerGET(ctx *fiber.Ctx) error {
-	// Get all .gcode files in /mnt/exUDISK. Enumerate all files in the directory and return the ones that end with .gcode
-
-	// Get all files in /mnt/exUDISK
-	sdcardDir := "/mnt/exUDISK"
-
-	if utils.IsDev() {
-		sdcardDir = "dev/sdcard"
-	}
-
-	// Get all files in /mnt/exUDISK
-	files := []File{}
-	err := filepath.Walk(sdcardDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		// Check if the file is a .gcode file
-		if filepath.Ext(path) == ".gcode" {
-			// Get the file info
-			fileInfo, err := os.Stat(path)
-			if err != nil {
-				return err
-			}
-
-			// Create a new file struct
-			file := File{
-				Name:     fileInfo.Name(),
-				Path:     path,
-				Type:     "gcode",
-				TypePath: []string{"gcode"},
-				Hash:     "hash",
-				Size:     int(fileInfo.Size()),
-				Date:     int(fileInfo.ModTime().Unix()),
-				Origin:   "sdcard",
-				Refs: struct {
-					Resource string `json:"resource"`
-					Download string `json:"download"`
-				}{
-					Resource: "resource",
-					Download: "download",
-				},
-				GcodeAnalysis: struct {
-					EstimatedPrintTime int `json:"estimatedPrintTime"`
-					Filament           struct {
-						Length int     `json:"length"`
-						Volume float64 `json:"volume"`
-					} `json:"filament"`
-				}{
-					EstimatedPrintTime: 0,
-					Filament: struct {
-						Length int     `json:"length"`
-						Volume float64 `json:"volume"`
-					}{
-						Length: 0,
-						Volume: 0,
-					},
-				},
-				Print: struct {
-					Failure int `json:"failure"`
-					Success int `json:"success"`
-					Last    struct {
-						Date    int  `json:"date"`
-						Success bool `json:"success"`
-					} `json:"last"`
-				}{
-					Failure: 0,
-					Success: 0,
-					Last: struct {
-						Date    int  `json:"date"`
-						Success bool `json:"success"`
-					}{
-						Date:    0,
-						Success: false,
-					},
-				},
-			}
-
-			// Append the file to the files slice
-			files = append(files, file)
-		}
-
-		return nil
-	})
-	if err != nil {
-		return err
-	}
-
-	if len(files) == 0 {
-		return ctx.Status(404).JSON(fiber.Map{
-			"error": "No files found",
-		})
-	}
-
-	// Return the files
-	return ctx.JSON(files)
+	return getFilesHandler(ctx, "/mnt/exUDISK")
 }
 
 func uploadFileHandler(ctx *fiber.Ctx, savePath string) error {
