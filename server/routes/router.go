@@ -15,6 +15,6 @@ func SetupRoutes(app *fiber.App) {
 	router.Get("/version", middleware.AuthHandler, versionHandler)
 
 	// /api/files/
-	filehandler.Get("/local", middleware.AuthHandler, localFilesHandlerGET).Post("/local", middleware.AuthHandler, localFilesHandlerPOST)
-	filehandler.Get("/sdcard", middleware.AuthHandler, sdcardFilesHandlerGET).Post("/sdcard", middleware.AuthHandler, sdcardFilesHandlerPOST)
+	filehandler.Post("/local", middleware.AuthHandler, localFilesHandlerPOST)
+	filehandler.Post("/sdcard", middleware.AuthHandler, sdcardFilesHandlerPOST)
 }
