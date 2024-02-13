@@ -75,8 +75,6 @@ func uploadFileHandler(ctx *fiber.Ctx, savePath string) error {
 		kobraprinter.Print()
 	}
 
-	// Set headers
-	ctx.Set("Location", filename)
 	return ctx.Status(201).JSON(fiber.Map{
 		"message": "File uploaded",
 	})
