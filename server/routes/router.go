@@ -17,4 +17,7 @@ func SetupRoutes(app *fiber.App) {
 	// /api/files/
 	filehandler.Post("/local", localFilesHandlerPOST)
 	filehandler.Post("/sdcard", sdcardFilesHandlerPOST)
+
+	// /api/files/:pathType/:path
+	filehandler.Get("/", getFilesGET)
 }

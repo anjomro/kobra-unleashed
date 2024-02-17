@@ -71,6 +71,8 @@ func WriteSettings(settings *structs.Settings) {
 		slog.Error("Error writing settings to settings.json", err)
 	}
 }
+
+// Checks if settings.json exists, if not, creates a new settings.json with a new API key
 func CheckSetup() {
 	// Check if settings.json exists
 	filename := "/user/settings.json"

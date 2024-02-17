@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/anjomro/kobra-unleashed/server/kobraprinter"
@@ -72,7 +73,7 @@ func uploadFileHandler(ctx *fiber.Ctx, savePath string) error {
 	// Print the file
 	if shouldPrint {
 		// Print the file
-		kobraprinter.Print()
+		fmt.Println("Printing file", filename)
 	}
 
 	return ctx.Status(201).JSON(fiber.Map{
@@ -86,4 +87,34 @@ func localFilesHandlerPOST(ctx *fiber.Ctx) error {
 
 func sdcardFilesHandlerPOST(ctx *fiber.Ctx) error {
 	return uploadFileHandler(ctx, "/mnt/exUDISK/")
+}
+
+func getFilesGET(ctx *fiber.Ctx) error {
+	// Detect if listLocal or listUdisk
+	// Get ?pathType and ?path
+	pathType := ctx.Query("pathType")
+	path := ctx.Query("path")
+
+	// If pathType is not listLocal or listUdisk, return 400
+	if pathType != "listLocal" && pathType != "listUdisk" {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid pathType",
+		})
+	}
+
+	// If path is empty, Just set it to root /
+	if path == "" {
+		path = "/"
+	}
+
+	err := kobraprinter.ListFiles(pathType, path)
+	if err != nil {
+		return ctx.Status(500).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"message": "Files listed",
+	})
 }

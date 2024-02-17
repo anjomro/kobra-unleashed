@@ -15,13 +15,13 @@ func NewTLSConfig() *tls.Config {
 	// Alternatively, manually add CA certificates to
 	// default openssl CA bundle.
 	certpool := x509.NewCertPool()
-	pemCerts, err := os.ReadFile(utils.GetEnv("MQTT_CAFILE", "samplecerts/ca-crt.pem"))
+	pemCerts, err := os.ReadFile(utils.GetEnv("MQTT_CAFILE", "certs/ca.crt"))
 	if err == nil {
 		certpool.AppendCertsFromPEM(pemCerts)
 	}
 
 	// Import client certificate/key pair
-	cert, err := tls.LoadX509KeyPair(utils.GetEnv("MQTT_CLIENT_CERT", "samplecerts/client-crt.pem"), utils.GetEnv("MQTT_CLIENT_KEY", "samplecerts/client-key.pem"))
+	cert, err := tls.LoadX509KeyPair(utils.GetEnv("MQTT_CLIENT_CERT", "certs/client.crt"), utils.GetEnv("MQTT_CLIENT_KEY", "certs/client.key"))
 	if err != nil {
 		panic(err)
 	}
@@ -56,23 +56,23 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("MSG: %s\n", msg.Payload())
 }
 
-var MQTTClient *MQTT.Client
+var mqtttClient MQTT.Client
 
 func GetMQTTClient() *MQTT.Client {
-	if MQTTClient == nil {
+	if mqtttClient == nil {
 		opts := MQTT.NewClientOptions()
-		opts.AddBroker(utils.GetEnv("MQTT_BROKER", "ssl://localhost:8883"))
-		opts.SetClientID(utils.GetEnv("MQTT_CLIENT_ID", "go-simple"))
+		opts.AddBroker(utils.GetEnv("MQTT_BROKER", "mqtts://localhost:8883"))
+		opts.SetClientID(utils.GetEnv("MQTT_CLIENT_ID", "kobra-client"))
 		opts.SetTLSConfig(NewTLSConfig())
 		opts.SetDefaultPublishHandler(f)
 
-		c := MQTT.NewClient(opts)
-		if token := c.Connect(); token.Wait() && token.Error() != nil {
+		mqtttClient = MQTT.NewClient(opts)
+		if token := mqtttClient.Connect(); token.Wait() && token.Error() != nil {
 			panic(token.Error())
+		} else {
+			fmt.Println("MQTT Connected")
 		}
 
-		MQTTClient = &c
-
 	}
-	return MQTTClient
+	return &mqtttClient
 }
