@@ -3,9 +3,11 @@ package mqtt
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"os"
 
+	"github.com/anjomro/kobra-unleashed/server/kobrautils"
 	"github.com/anjomro/kobra-unleashed/server/utils"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 )
@@ -75,4 +77,51 @@ func GetMQTTClient() *MQTT.Client {
 
 	}
 	return &mqtttClient
+}
+
+// CreatePayload creates a json payload from a map
+func CreatePayload(data map[string]interface{}) ([]byte, error) {
+
+	payloadBytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling payload: %v", err)
+	}
+
+	return payloadBytes, nil
+}
+
+// SendMQTTCommand sends a command to the printer with json payload
+func SendMQTTCommand(payload []byte) error {
+	mqttclinet := *GetMQTTClient()
+
+	// Check if the MQTT client is connected
+	if !mqttclinet.IsConnected() {
+		return fmt.Errorf("MQTT client is not connected")
+	}
+
+	printerModel, err := kobrautils.GetPrinterModel()
+	if err != nil {
+		return err
+	}
+
+	printerID, err := kobrautils.GetPrinterID()
+	if err != nil {
+		return err
+	}
+
+	// Convert map string interface to interface
+
+	// anycubic/anycubicCloud/v1/server/printer/<PRINTER_MODEL_ID>/<PRINTER_ID>/response
+	token := mqttclinet.Publish(fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/%s/%s/response", printerModel, printerID), 0, false, payload)
+	if token.Wait() && token.Error() != nil {
+		return fmt.Errorf("[SendMQTTCommand]: error sending mqtt command: %v", token.Error())
+	} else {
+		fmt.Println("MQTT Command Sent")
+	}
+	if utils.IsDev() {
+		fmt.Println("MQTT URL:", fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/%s/%s/response", printerModel, printerID))
+		jsonpayload, _ := json.Marshal(payload)
+		fmt.Println("MQTT Payload:", string(jsonpayload))
+	}
+	return nil
 }
