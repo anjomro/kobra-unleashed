@@ -19,21 +19,11 @@ func ListFiles(pathType string, path string) error {
 		path = "/"
 	}
 
-	payload, err := mqtt.CreatePayload(jsn{
-		"type":   "file",
-		"action": pathType,
-		"data": jsn{
-			"path": path,
-		},
-	})
-	if err != nil {
-		return fmt.Errorf("[ListFiles]: error marshalling payload: %v", err)
-	}
-
-	err = mqtt.SendMQTTCommand(payload)
+	err := mqtt.SendCommand(pathType, "response", jsn{"path": path})
 
 	if err != nil {
-		return fmt.Errorf("[ListFiles]: error sending mqtt command: %v", err)
+		return err
+	} else {
+		return nil
 	}
-	return nil
 }

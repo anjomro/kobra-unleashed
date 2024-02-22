@@ -20,12 +20,12 @@ func NewTLSConfig() *tls.Config {
 	// Alternatively, manually add CA certificates to
 	// default openssl CA bundle.
 	certpool := x509.NewCertPool()
-	pemCerts, err := os.ReadFile(utils.GetEnv("MQTT_CAFILE", "samplecerts/ca-crt.pem"))
+	pemCerts, err := os.ReadFile(utils.GetEnv("MQTT_CAFILE", "certs/ca.crt"))
 	if err == nil {
 		certpool.AppendCertsFromPEM(pemCerts)
 	}
 	// Import client certificate/key pair
-	cert, err := tls.LoadX509KeyPair(utils.GetEnv("MQTT_CLIENT_CERT", "samplecerts/client-crt.pem"), utils.GetEnv("MQTT_CLIENT_KEY", "samplecerts/client-key.pem"))
+	cert, err := tls.LoadX509KeyPair(utils.GetEnv("MQTT_CLIENT_CERT", "certs/client.crt"), utils.GetEnv("MQTT_CLIENT_KEY", "certs/client.key"))
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +81,7 @@ func getCommandTopic(cmdType string, action string) string {
 	return fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/20021/%s/%s/%s", utils.GetPrinterID(), cmdType, action)
 }
 
-func SendCommand(cmdType string, action string, payload map[string]interface{}) {
+func SendCommand(cmdType string, action string, payload map[string]interface{}) error {
 	// Generate a UUID
 	msgID := uuid.New().String()
 
@@ -97,7 +97,7 @@ func SendCommand(cmdType string, action string, payload map[string]interface{}) 
 	// Convert the payload to JSON
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	// Replace all occurrences of / with \/
@@ -109,9 +109,11 @@ func SendCommand(cmdType string, action string, payload map[string]interface{}) 
 	topic := getCommandTopic(cmdType, action)
 	token := client.Publish(topic, 0, false, payloadStr)
 	token.Wait()
+
+	return nil
 }
 
-func Print(filename string, filePath string) {
+func Print(filename string, filePath string) error {
 	// Seed the random number generator
 	// Generate a random task id
 	taskID := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(1000000)
@@ -131,10 +133,15 @@ func Print(filename string, filePath string) {
 	}
 
 	// Send the command
-	SendCommand("print", "start", payload)
+	// SendCommand("print", "start", payload)
+	if err := SendCommand("print", "start", payload); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func SendPrintAction(taskID string, action string) {
+func SendPrintAction(taskID string, action string) error {
 	// Create the data payload
 	data := map[string]interface{}{
 		"taskid": taskID,
@@ -146,5 +153,9 @@ func SendPrintAction(taskID string, action string) {
 	}
 
 	// Send the command
-	SendCommand("print", action, payload)
+	if err := SendCommand("print", action, payload); err != nil {
+		return err
+	}
+
+	return nil
 }
