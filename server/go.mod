@@ -6,13 +6,13 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/gofiber/contrib/websocket v1.3.0
 	github.com/gofiber/fiber/v2 v2.52.0
+	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 )
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/fasthttp/websocket v1.5.7 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/klauspost/compress v1.17.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

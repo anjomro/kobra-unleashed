@@ -5,11 +5,14 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
+	"strings"
+	"time"
 
-	"github.com/anjomro/kobra-unleashed/server/kobrautils"
 	"github.com/anjomro/kobra-unleashed/server/utils"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
+	"github.com/google/uuid"
 )
 
 func NewTLSConfig() *tls.Config {
@@ -17,24 +20,21 @@ func NewTLSConfig() *tls.Config {
 	// Alternatively, manually add CA certificates to
 	// default openssl CA bundle.
 	certpool := x509.NewCertPool()
-	pemCerts, err := os.ReadFile(utils.GetEnv("MQTT_CAFILE", "certs/ca.crt"))
+	pemCerts, err := os.ReadFile(utils.GetEnv("MQTT_CAFILE", "samplecerts/ca-crt.pem"))
 	if err == nil {
 		certpool.AppendCertsFromPEM(pemCerts)
 	}
-
 	// Import client certificate/key pair
-	cert, err := tls.LoadX509KeyPair(utils.GetEnv("MQTT_CLIENT_CERT", "certs/client.crt"), utils.GetEnv("MQTT_CLIENT_KEY", "certs/client.key"))
+	cert, err := tls.LoadX509KeyPair(utils.GetEnv("MQTT_CLIENT_CERT", "samplecerts/client-crt.pem"), utils.GetEnv("MQTT_CLIENT_KEY", "samplecerts/client-key.pem"))
 	if err != nil {
 		panic(err)
 	}
-
 	// Just to print out the client certificate..
 	cert.Leaf, err = x509.ParseCertificate(cert.Certificate[0])
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(cert.Leaf)
-
 	// Create tls.Config with desired tls properties
 	return &tls.Config{
 		// RootCAs = certs used to verify server cert.
@@ -58,70 +58,93 @@ var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
 	fmt.Printf("MSG: %s\n", msg.Payload())
 }
 
-var mqtttClient MQTT.Client
+var MQTTClient *MQTT.Client
 
 func GetMQTTClient() *MQTT.Client {
-	if mqtttClient == nil {
+	if MQTTClient == nil {
 		opts := MQTT.NewClientOptions()
-		opts.AddBroker(utils.GetEnv("MQTT_BROKER", "mqtts://localhost:8883"))
-		opts.SetClientID(utils.GetEnv("MQTT_CLIENT_ID", "kobra-client"))
+		opts.AddBroker(utils.GetEnv("MQTT_BROKER", "ssl://localhost:8883"))
+		opts.SetClientID(utils.GetEnv("MQTT_CLIENT_ID", "go-simple"))
 		opts.SetTLSConfig(NewTLSConfig())
 		opts.SetDefaultPublishHandler(f)
-
-		mqtttClient = MQTT.NewClient(opts)
-		if token := mqtttClient.Connect(); token.Wait() && token.Error() != nil {
+		c := MQTT.NewClient(opts)
+		if token := c.Connect(); token.Wait() && token.Error() != nil {
 			panic(token.Error())
-		} else {
-			fmt.Println("MQTT Connected")
 		}
-
+		MQTTClient = &c
 	}
-	return &mqtttClient
+	return MQTTClient
 }
 
-// CreatePayload creates a json payload from a map
-func CreatePayload(data map[string]interface{}) ([]byte, error) {
-
-	payloadBytes, err := json.Marshal(data)
-	if err != nil {
-		return nil, fmt.Errorf("error marshalling payload: %v", err)
-	}
-
-	return payloadBytes, nil
+func getCommandTopic(cmdType string, action string) string {
+	// Returns the topic where a command should be published
+	return fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/20021/%s/%s/%s", utils.GetPrinterID(), cmdType, action)
 }
 
-// SendMQTTCommand sends a command to the printer with json payload
-func SendMQTTCommand(payload []byte) error {
-	mqttclinet := *GetMQTTClient()
+func SendCommand(cmdType string, action string, payload map[string]interface{}) {
+	// Generate a UUID
+	msgID := uuid.New().String()
 
-	// Check if the MQTT client is connected
-	if !mqttclinet.IsConnected() {
-		return fmt.Errorf("MQTT client is not connected")
-	}
+	// Get the current timestamp in milliseconds
+	timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
-	printerModel, err := kobrautils.GetPrinterModel()
+	// Add the msgid, timestamp, type, and action to the payload
+	payload["msgid"] = msgID
+	payload["timestamp"] = timestamp
+	payload["type"] = cmdType
+	payload["action"] = action
+
+	// Convert the payload to JSON
+	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
-	printerID, err := kobrautils.GetPrinterID()
-	if err != nil {
-		return err
+	// Replace all occurrences of / with \/
+	payloadStr := string(payloadBytes)
+	payloadStr = strings.ReplaceAll(payloadStr, "/", "\\/")
+
+	client := *GetMQTTClient()
+	// Publish the message to the MQTT topic
+	topic := getCommandTopic(cmdType, action)
+	token := client.Publish(topic, 0, false, payloadStr)
+	token.Wait()
+}
+
+func Print(filename string, filePath string) {
+	// Seed the random number generator
+	// Generate a random task id
+	taskID := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(1000000)
+
+	// Create the data payload
+	data := map[string]interface{}{
+		"filename":  filename,
+		"filepath":  filePath,
+		"taskid":    taskID,
+		"task_mode": 1,
+		"filetype":  1,
 	}
 
-	// Convert map string interface to interface
+	// Create the payload for the command
+	payload := map[string]interface{}{
+		"data": data,
+	}
 
-	// anycubic/anycubicCloud/v1/server/printer/<PRINTER_MODEL_ID>/<PRINTER_ID>/response
-	token := mqttclinet.Publish(fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/%s/%s/response", printerModel, printerID), 0, false, payload)
-	if token.Wait() && token.Error() != nil {
-		return fmt.Errorf("[SendMQTTCommand]: error sending mqtt command: %v", token.Error())
-	} else {
-		fmt.Println("MQTT Command Sent")
+	// Send the command
+	SendCommand("print", "start", payload)
+}
+
+func SendPrintAction(taskID string, action string) {
+	// Create the data payload
+	data := map[string]interface{}{
+		"taskid": taskID,
 	}
-	if utils.IsDev() {
-		fmt.Println("MQTT URL:", fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/%s/%s/response", printerModel, printerID))
-		jsonpayload, _ := json.Marshal(payload)
-		fmt.Println("MQTT Payload:", string(jsonpayload))
+
+	// Create the payload for the command
+	payload := map[string]interface{}{
+		"data": data,
 	}
-	return nil
+
+	// Send the command
+	SendCommand("print", action, payload)
 }
