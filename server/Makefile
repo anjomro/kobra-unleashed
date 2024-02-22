@@ -8,7 +8,8 @@ GOCLEAN = $(GOCMD) clean
 # Build parameters
 BINARY_NAME = kobra-server
 BUILD_DIR = dist
-TARGET_ARCH = armv7
+TARGET_OS = linux
+TARGET_ARCH = arm
 
 # Default target
 all: clean build
@@ -21,9 +22,15 @@ clean:
 
 # Build target
 build:
-	@echo "Building..."
+	@echo "Building for testing..."
 	@mkdir -p $(BUILD_DIR)
-	@$(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME) -v
+	@GOOS=$(TARGET_OS) GOARCH=$(TARGET_ARCH) $(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME) -v
+
+# Production build target
+build-prod:
+	@echo "Building for production..."
+	@mkdir -p $(BUILD_DIR)
+	@GOOS=$(TARGET_OS) GOARCH=$(TARGET_ARCH) $(GOBUILD) -o $(BUILD_DIR)/$(BINARY_NAME) -v -ldflags="-s -w"
 
 # Test target
 test:
