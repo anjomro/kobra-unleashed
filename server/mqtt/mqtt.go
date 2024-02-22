@@ -20,12 +20,12 @@ func NewTLSConfig() *tls.Config {
 	// Alternatively, manually add CA certificates to
 	// default openssl CA bundle.
 	certpool := x509.NewCertPool()
-	pemCerts, err := os.ReadFile(utils.GetEnv("MQTT_CAFILE", "certs/ca.crt"))
+	pemCerts, err := os.ReadFile(utils.GetEnv("MQTT_CAFILE", "/user/ca.crt"))
 	if err == nil {
 		certpool.AppendCertsFromPEM(pemCerts)
 	}
 	// Import client certificate/key pair
-	cert, err := tls.LoadX509KeyPair(utils.GetEnv("MQTT_CLIENT_CERT", "certs/client.crt"), utils.GetEnv("MQTT_CLIENT_KEY", "certs/client.key"))
+	cert, err := tls.LoadX509KeyPair(utils.GetEnv("MQTT_CLIENT_CERT", "/user/client.crt"), utils.GetEnv("MQTT_CLIENT_KEY", "/user/client.key"))
 	if err != nil {
 		panic(err)
 	}

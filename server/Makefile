@@ -37,9 +37,23 @@ test:
 	@echo "Running tests..."
 	@$(GOTEST) -v ./...
 
+install:
+	@echo "Uploading to Printer..."
+	# Ask for ip input
+	@read -p "Enter the printer IP: " PRINTER_IP; \
+	# Upload to printer
+	scp $(BUILD_DIR)/$(BINARY_NAME) root@$$PRINTER_IP:/opt/bin/$(BINARY_NAME)
+
+uninstall:
+	@echo "Removing from Printer..."
+	# Ask for ip input
+	@read -p "Enter the printer IP: " PRINTER_IP; \
+	# Remove from printer
+	ssh root@$$PRINTER_IP "rm -f /opt/bin/$(BINARY_NAME)"
+
 # Get dependencies target
 get-deps:
 	@echo "Getting dependencies..."
 	@$(GOGET) -v ./...
 
-.PHONY: all clean build test get-deps
+.PHONY: all clean build build-prod test get-deps
