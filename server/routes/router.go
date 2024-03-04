@@ -7,6 +7,7 @@ import (
 )
 
 func SetupRoutes(app *fiber.App) {
+
 	// Setup websockets
 	app.Use("/ws", middleware.AuthHandler, websocketHandler)
 	app.Get("/ws/shell", middleware.AuthHandler, websocket.New(websocketShellHandler))
@@ -16,8 +17,6 @@ func SetupRoutes(app *fiber.App) {
 	router := app.Group("/api").Use(middleware.AuthHandler)
 	filehandler := router.Group("/files")
 
-	// /api/
-	router.Get("/", indexHandler)
 	router.Get("/version", versionHandler)
 
 	// /api/files/

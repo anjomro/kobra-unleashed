@@ -38,12 +38,12 @@ func main() {
 
 	routes.SetupRoutes(app)
 
+	app.Static("/", "/www")
+
 	// Catch all other routes and send back 404
 	app.Use(func(c *fiber.Ctx) error {
 		return c.Status(404).SendString("Not Found")
 	})
-
-	app.Static("/", "/www")
 
 	app.Listen(":" + appPort)
 }
