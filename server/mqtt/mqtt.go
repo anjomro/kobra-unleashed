@@ -5,11 +5,14 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/anjomro/kobra-unleashed/server/kobrautils"
+
+	"github.com/anjomro/kobra-unleashed/server/structs"
 	"github.com/anjomro/kobra-unleashed/server/utils"
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"github.com/google/uuid"
@@ -76,12 +79,22 @@ func GetMQTTClient() *MQTT.Client {
 	return MQTTClient
 }
 
-func getCommandTopic(cmdType string, action string) string {
+func getCommandTopic() (string, error) {
 	// Returns the topic where a command should be published
-	return fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/20021/%s/%s/%s", utils.GetPrinterID(), cmdType, action)
+	printerModel, err := kobrautils.GetPrinterModel()
+	if err != nil {
+		return "", err
+	}
+
+	printerId, err := kobrautils.GetPrinterID()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/%s/%s/%s", printerModel, printerId, "response"), nil
 }
 
-func SendCommand(cmdType string, action string, payload map[string]interface{}) error {
+func SendCommand(payload *structs.MqttPayload) error {
 	// Generate a UUID
 	msgID := uuid.New().String()
 
@@ -89,10 +102,11 @@ func SendCommand(cmdType string, action string, payload map[string]interface{}) 
 	timestamp := time.Now().UnixNano() / int64(time.Millisecond)
 
 	// Add the msgid, timestamp, type, and action to the payload
-	payload["msgid"] = msgID
-	payload["timestamp"] = timestamp
-	payload["type"] = cmdType
-	payload["action"] = action
+
+	// Create the payload for the command
+
+	payload.MsgID = msgID
+	payload.Timestamp = timestamp
 
 	// Convert the payload to JSON
 	payloadBytes, err := json.Marshal(payload)
@@ -106,56 +120,15 @@ func SendCommand(cmdType string, action string, payload map[string]interface{}) 
 
 	client := *GetMQTTClient()
 	// Publish the message to the MQTT topic
-	topic := getCommandTopic(cmdType, action)
+	topic, err := getCommandTopic()
+	if err != nil {
+		return err
+	}
 	token := client.Publish(topic, 0, false, payloadStr)
 	token.Wait()
 
-	return nil
-}
-
-func Print(filename string, filePath string) error {
-	// Seed the random number generator
-	// Generate a random task id
-	taskID := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(1000000)
-
-	// Create the data payload
-	data := map[string]interface{}{
-		"filename":  filename,
-		"filepath":  filePath,
-		"taskid":    taskID,
-		"task_mode": 1,
-		"filetype":  1,
-	}
-
-	// Create the payload for the command
-	payload := map[string]interface{}{
-		"data": data,
-	}
-
-	// Send the command
-	// SendCommand("print", "start", payload)
-	if err := SendCommand("print", "start", payload); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func SendPrintAction(taskID string, action string) error {
-	// Create the data payload
-	data := map[string]interface{}{
-		"taskid": taskID,
-	}
-
-	// Create the payload for the command
-	payload := map[string]interface{}{
-		"data": data,
-	}
-
-	// Send the command
-	if err := SendCommand("print", action, payload); err != nil {
-		return err
-	}
+	slog.Info("MQTT", "Published message to topic", topic)
+	slog.Info("MQTT", "payload", payloadStr)
 
 	return nil
 }

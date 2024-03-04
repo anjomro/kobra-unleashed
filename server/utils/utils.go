@@ -17,15 +17,6 @@ func GetEnv(key string, fallback string) string {
 	return value
 }
 
-func GetPrinterID() string {
-	return GetEnv("PRINTER_ID", "printer")
-}
-
-func IsDev() bool {
-	// If APP_ENV is not set, default to "prod"
-	return GetEnv("APP_ENV", "prod") == "dev"
-}
-
 func CreateAPIKey() string {
 	// Open /dev/urandom to get random bytes.
 	f, err := os.Open("/dev/urandom")
@@ -45,51 +36,70 @@ func CreateAPIKey() string {
 	return fmt.Sprintf("%x", b)
 }
 
-func WriteSettings(settings *structs.Settings) {
+// Make a config method that has Read Config and Save Config
 
-	filename := "/user/settings.json"
-	if IsDev() {
-		filename = "./settings.json"
-	}
-
-	// Create settings.json
-	file, err := os.Create(filename)
-	if err != nil {
-		slog.Error("Error creating settings.json", err)
-	}
-	defer file.Close()
-
-	// Marshal settings to json
-	settingsJSON, err := json.Marshal(settings)
-	if err != nil {
-		slog.Error("Error marshalling settings to json", err)
-	}
-
-	// Write settings to settings.json
-	_, err = file.Write(settingsJSON)
-	if err != nil {
-		slog.Error("Error writing settings to settings.json", err)
-	}
+type Config struct {
+	Settings structs.Settings
 }
 
-// Checks if settings.json exists, if not, creates a new settings.json with a new API key
-func CheckSetup() {
-	// Check if settings.json exists
+func (c *Config) Read() error {
 	filename := "/user/settings.json"
-	if IsDev() {
-		filename = "./settings.json"
+
+	configfile, err := os.Open(filename)
+	if err != nil {
+		slog.Error("Error opening file", err)
 	}
 
-	_, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		slog.Info("settings.json does not exist. Creating new settings.json")
-		// Create new settings.json with a new API key
-		settings := new(structs.Settings)
+	defer configfile.Close()
 
-		// Create new API key
-		settings.APIKey = CreateAPIKey()
-
-		// Write settings to settings.json
-		WriteSettings(settings)
+	// Read json file
+	byteValue, err := os.ReadFile(filename)
+	if err != nil {
+		slog.Error("Error reading file", err)
+		return err
 	}
+
+	// Unmarshal json
+	err = json.Unmarshal(byteValue, &c.Settings)
+	if err != nil {
+		slog.Error("Error unmarshalling json", err)
+		return err
+	}
+
+	return nil
+}
+
+func (c *Config) Save() error {
+	filename := "/user/settings.json"
+
+	// Write settings to settings.json
+
+	configfile, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		slog.Error("Error opening file", err)
+		return err
+	}
+	defer configfile.Close()
+
+	// Marshal json
+	byteValue, err := json.Marshal(c.Settings)
+	if err != nil {
+		slog.Error("Error marshalling json", err)
+		return err
+	}
+
+	// Write to file
+	_, err = configfile.Write(byteValue)
+	if err != nil {
+		slog.Error("Error writing to file", err)
+		return err
+	}
+
+	return nil
+}
+
+func SetConfig() *Config {
+	var settings structs.Settings
+	c := Config{settings}
+	return &c
 }

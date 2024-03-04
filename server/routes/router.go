@@ -10,6 +10,7 @@ func SetupRoutes(app *fiber.App) {
 	// Setup websockets
 	app.Use("/ws", middleware.AuthHandler, websocketHandler)
 	app.Get("/ws/shell", middleware.AuthHandler, websocket.New(websocketShellHandler))
+	app.Post("/api/login", LoginHandler).Post("/api/logout", middleware.AuthHandler, LogoutHandler)
 
 	// Create a router with base path /api
 	router := app.Group("/api").Use(middleware.AuthHandler)

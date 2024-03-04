@@ -5,7 +5,6 @@ import (
 	"log/slog"
 
 	"github.com/anjomro/kobra-unleashed/server/kobraprinter"
-	"github.com/anjomro/kobra-unleashed/server/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -49,15 +48,6 @@ func uploadFileHandler(ctx *fiber.Ctx, savePath string) error {
 	shouldPrint := ctx.FormValue("print") == "true"
 
 	// Check if UDISK or exUDISK
-	if utils.IsDev() {
-		// Check if the file is being uploaded to /mnt/UDISK or /mnt/exUDISK
-		if savePath == "/mnt/UDISK/" {
-			savePath = "dev/sdcard/"
-		}
-		if savePath == "/mnt/exUDISK/" {
-			savePath = "dev/uploads/"
-		}
-	}
 
 	filename := savePath + file.Filename
 

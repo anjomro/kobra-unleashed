@@ -2,9 +2,12 @@ package kobrautils
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
+	"time"
 
-	"github.com/anjomro/kobra-unleashed/server/utils"
+	"github.com/anjomro/kobra-unleashed/server/structs"
+	"github.com/google/uuid"
 )
 
 var printerID string
@@ -18,20 +21,16 @@ func GetPrinterID() (string, error) {
 	if printerID != "" {
 		return printerID, nil
 	} else {
-
-		if utils.IsDev() {
-			// Return 32 character string
-			devID := utils.GetEnv("PRINTER_ID", "bfe8c2c0733dcce037b565e0d44d4e23")
-			return devID, nil
-		} else {
-			data, err := os.ReadFile("/user/ac_mqtt_connect_info")
-			if err != nil {
-				return "", fmt.Errorf("error reading file: %v", err)
-			}
-
-			printerID = string(data[:32])
-			return printerID, nil
+		// If not, read the file
+		file, err := os.ReadFile("/user/ac_mqtt_connect_info")
+		if err != nil {
+			return "", fmt.Errorf("error reading printer ID")
 		}
+
+		// From 0000080 to 0000090
+		printerID = string(file[128:160])
+		slog.Info("GetPrinterID", "printerID", printerID)
+		return printerID, nil
 	}
 }
 
@@ -39,20 +38,30 @@ func GetPrinterModel() (string, error) {
 	if printerModel != "" {
 		return printerModel, nil
 	} else {
-		if utils.IsDev() {
-			devModel := utils.GetEnv("PRINTER_MODEL", "20023")
-			return devModel, nil
+		if _, err := os.Stat("/user/printer_max.cfg"); err == nil {
+			printerModel = "20023"
+		} else if _, err := os.Stat("/user/printer.cfg"); err == nil {
+			printerModel = "20021"
+		} else if _, err := os.Stat("/user/printer_plus.cfg"); err == nil {
+			printerModel = "20022"
 		} else {
-			if _, err := os.Stat("/user/printer_max.cfg"); err == nil {
-				printerModel = "20023"
-			} else if _, err := os.Stat("/user/printer.cfg"); err == nil {
-				printerModel = "20021"
-			} else if _, err := os.Stat("/user/printer_plus.cfg"); err == nil {
-				printerModel = "20022"
-			} else {
-				return "", fmt.Errorf("error reading printer model")
-			}
-			return printerModel, nil
+			return "", fmt.Errorf("error reading printer model")
 		}
+		return printerModel, nil
+
+	}
+}
+
+// Initialize the MqttPayload struct
+func NewMqttPayload(typeStr string, actionStr string, data interface{}) *structs.MqttPayload {
+	msgID := uuid.New().String()
+	timestamp := time.Now().UnixNano() / int64(time.Millisecond)
+
+	return &structs.MqttPayload{
+		MsgID:     msgID,
+		Timestamp: timestamp,
+		Type:      typeStr,
+		Action:    actionStr,
+		Data:      data,
 	}
 }

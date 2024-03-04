@@ -3,11 +3,11 @@ package kobraprinter
 import (
 	"fmt"
 
+	"github.com/anjomro/kobra-unleashed/server/kobrautils"
 	"github.com/anjomro/kobra-unleashed/server/mqtt"
 )
 
 // Map string interface short
-type jsn map[string]interface{}
 
 func ListFiles(pathType string, path string) error {
 	if pathType != "listLocal" && pathType != "listUdisk" {
@@ -19,7 +19,9 @@ func ListFiles(pathType string, path string) error {
 		path = "/"
 	}
 
-	err := mqtt.SendCommand(pathType, "response", jsn{"path": path})
+	payld := kobrautils.NewMqttPayload("file", pathType, map[string]interface{}{"path": path})
+
+	err := mqtt.SendCommand(payld)
 
 	if err != nil {
 		return err

@@ -3,9 +3,10 @@ module github.com/anjomro/kobra-unleashed/server
 go 1.18
 
 require (
+	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/gofiber/contrib/websocket v1.3.0
-	github.com/gofiber/fiber/v2 v2.52.0
+	github.com/gofiber/fiber/v2 v2.52.2
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 )
