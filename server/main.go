@@ -25,7 +25,7 @@ func main() {
 		slog.Error("Error loading .env file", err)
 	}
 
-	appPort := utils.GetEnv("APP_PORT", "3000")
+	appPort := utils.GetEnv("APP_PORT", "80")
 
 	app := fiber.New()
 
