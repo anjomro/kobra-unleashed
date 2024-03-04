@@ -17,7 +17,7 @@ func SetupRoutes(app *fiber.App) {
 	router := app.Group("/api").Use(middleware.AuthHandler)
 
 	router.Get("/version", versionHandler)
-	router.Post("/printer/settings", SetPrinterSettingsHandler)
+	router.Put("/printer/settings", SetPrinterSettingsHandler)
 
 	filehandler := router.Group("/files")
 	// /api/files/
