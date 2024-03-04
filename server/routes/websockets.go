@@ -3,8 +3,6 @@ package routes
 import (
 	"bufio"
 	"encoding/json"
-	"io"
-	"log"
 	"os/exec"
 
 	"github.com/gofiber/contrib/websocket"
@@ -69,26 +67,26 @@ func websocketShellHandler(c *websocket.Conn) {
 			continue
 		}
 
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			c.WriteJSON(wsMessage{ErrMess: err.Error(), ErrCode: 4})
-			continue
-		}
-
 		if err := cmd.Start(); err != nil {
 			c.WriteJSON(wsMessage{ErrMess: err.Error(), ErrCode: 5})
 			continue
 		}
 
-		s := bufio.NewScanner(io.MultiReader(stdout, stderr))
-		for s.Scan() {
+		stdo := bufio.NewScanner(stdout)
+		for stdo.Scan() {
 			// c.WriteMessage(websocket.TextMessage, s.Bytes())
-			c.WriteJSON(wsMessage{Message: s.Text()})
+			c.WriteJSON(wsMessage{Message: stdo.Text()})
 		}
 
 		if err := cmd.Wait(); err != nil {
-			log.Println(err)
-			return
+			// Check if command not found error
+			if err.Error() == "exit status 127" {
+				c.WriteJSON(wsMessage{ErrMess: "Command not found", ErrCode: 6})
+				continue
+			} else {
+				c.WriteJSON(wsMessage{ErrMess: err.Error(), ErrCode: 7})
+				continue
+			}
 		}
 	}
 }

@@ -15,10 +15,11 @@ func SetupRoutes(app *fiber.App) {
 
 	// Create a router with base path /api
 	router := app.Group("/api").Use(middleware.AuthHandler)
-	filehandler := router.Group("/files")
 
 	router.Get("/version", versionHandler)
+	router.Post("/printer/settings", SetPrinterSettingsHandler)
 
+	filehandler := router.Group("/files")
 	// /api/files/
 	filehandler.Post("/local", localFilesHandlerPOST)
 	filehandler.Post("/sdcard", sdcardFilesHandlerPOST)
