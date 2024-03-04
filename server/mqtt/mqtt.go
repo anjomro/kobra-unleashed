@@ -91,7 +91,7 @@ func getCommandTopic() (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/%s/%s/%s", printerModel, printerId, "response"), nil
+	return fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/%s/%s", printerModel, printerId), nil
 }
 
 func SendCommand(payload *structs.MqttPayload) error {
