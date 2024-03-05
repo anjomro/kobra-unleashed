@@ -2,7 +2,6 @@ package kobrautils
 
 import (
 	"fmt"
-	"log/slog"
 	"os"
 	"time"
 
@@ -29,7 +28,6 @@ func GetPrinterID() (string, error) {
 
 		// From 0000080 to 0000090
 		printerID = string(file[128:160])
-		slog.Info("GetPrinterID", "printerID", printerID)
 		return printerID, nil
 	}
 }

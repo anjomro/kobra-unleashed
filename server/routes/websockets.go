@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"os/exec"
 
+	"github.com/anjomro/kobra-unleashed/server/mqtt"
+	"github.com/anjomro/kobra-unleashed/server/structs"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 )
@@ -15,6 +17,15 @@ func websocketHandler(ctx *fiber.Ctx) error {
 		ctx.Locals("allowed", true)
 		return ctx.Next()
 	}
+
+	// if websocket.IsCloseError(ctx) {
+	// 	// Check the path
+	// 	// If the path is /ws/info then close the mqtt connection
+
+	// 	webPath := ctx.Path()
+	// 	if webPath == "/ws/info" {
+	// 		// Unsubscribe from the topic
+
 	return fiber.ErrUpgradeRequired
 }
 
@@ -88,5 +99,31 @@ func websocketShellHandler(c *websocket.Conn) {
 				continue
 			}
 		}
+	}
+}
+
+func GetPrinterMessageHandler(c *websocket.Conn) {
+	// Subscribe to the printer messages
+	// Get the channel
+	mqttChannel := mqtt.SubscribeToMqttChannel()
+
+	// Process the input and output
+	for {
+		// Decode the message json into the MqttResponse struct
+		var mqttResp structs.MqttResponse
+
+		mqttResp.Data = structs.MqttTempatureData{}
+
+		// Unmarshal json
+		err := json.Unmarshal(<-mqttChannel, &mqttResp)
+		if err != nil {
+			c.WriteJSON(wsMessage{ErrMess: err.Error(), ErrCode: 1})
+			continue
+		}
+
+		// Send the message to the browser
+		c.WriteJSON(mqttResp)
+
+		// End
 	}
 }

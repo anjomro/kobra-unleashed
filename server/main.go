@@ -5,6 +5,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/anjomro/kobra-unleashed/server/mqtt"
 	"github.com/anjomro/kobra-unleashed/server/routes"
 	"github.com/anjomro/kobra-unleashed/server/sess"
 	"github.com/anjomro/kobra-unleashed/server/utils"
@@ -22,7 +23,7 @@ func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		slog.Error("Error loading .env file", err)
+		slog.Error("Error loading .env file", "errMsg", err.Error())
 	}
 
 	appPort := utils.GetEnv("APP_PORT", "80")
@@ -35,6 +36,8 @@ func main() {
 		slog.Info("Request:", c.Method(), c.Path())
 		return c.Next()
 	})
+
+	mqtt.SubscribeToPrinterMessages()
 
 	routes.SetupRoutes(app)
 

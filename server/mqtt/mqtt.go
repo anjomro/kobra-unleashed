@@ -18,6 +18,18 @@ import (
 	"github.com/google/uuid"
 )
 
+var (
+	f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
+		fmt.Printf("TOPIC: %s\n", string(msg.Topic()))
+		fmt.Printf("MSG: %s\n", string(msg.Payload()))
+	}
+
+	MQTTClient *MQTT.Client
+
+	// byte channel
+	globalMqttChannel = make(chan []byte)
+)
+
 func NewTLSConfig() *tls.Config {
 	// Import trusted certificates from CAfile.pem.
 	// Alternatively, manually add CA certificates to
@@ -37,7 +49,6 @@ func NewTLSConfig() *tls.Config {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(cert.Leaf)
 	// Create tls.Config with desired tls properties
 	return &tls.Config{
 		// RootCAs = certs used to verify server cert.
@@ -55,13 +66,6 @@ func NewTLSConfig() *tls.Config {
 		Certificates: []tls.Certificate{cert},
 	}
 }
-
-var f MQTT.MessageHandler = func(client MQTT.Client, msg MQTT.Message) {
-	fmt.Printf("TOPIC: %s\n", msg.Topic())
-	fmt.Printf("MSG: %s\n", msg.Payload())
-}
-
-var MQTTClient *MQTT.Client
 
 func GetMQTTClient() *MQTT.Client {
 	if MQTTClient == nil {
@@ -92,6 +96,21 @@ func getCommandTopic() (string, error) {
 	}
 
 	return fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/%s/%s", printerModel, printerId), nil
+}
+
+func getPublicTopic() (string, error) {
+	// Returns the topic where printer messages should be published
+	printerModel, err := kobrautils.GetPrinterModel()
+	if err != nil {
+		return "", err
+	}
+
+	printerId, err := kobrautils.GetPrinterID()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("anycubic/anycubicCloud/v1/printer/public/%s/%s", printerModel, printerId), nil
 }
 
 func SendCommand(payload *structs.MqttPayload) error {
@@ -131,4 +150,32 @@ func SendCommand(payload *structs.MqttPayload) error {
 	slog.Info("MQTT", "payload", payloadStr)
 
 	return nil
+}
+
+// Subscribe to anything
+func SubscribeToPrinterMessages() error {
+	// Subscribe to the printer messages
+
+	client := *GetMQTTClient()
+	topic, err := getPublicTopic()
+	if err != nil {
+		return err
+	}
+
+	topic = topic + "/#"
+
+	token := client.Subscribe(topic, 0, func(client MQTT.Client, msg MQTT.Message) {
+		// Push the message to the channel
+		globalMqttChannel <- msg.Payload()
+	})
+
+	token.Wait()
+
+	slog.Info("MQTT", "Subscribed to topic", topic)
+
+	return nil
+}
+
+func SubscribeToMqttChannel() chan []byte {
+	return globalMqttChannel
 }
