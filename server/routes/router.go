@@ -8,7 +8,6 @@ import (
 )
 
 func SetupRoutes(app *fiber.App) {
-
 	ws := app.Group("/ws").Use(middleware.AuthHandler, func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
 			c.Locals("allowed", true)
@@ -19,7 +18,11 @@ func SetupRoutes(app *fiber.App) {
 
 	ws.Get("/info", socketio.New(
 		func(c *socketio.Websocket) {
+			// Set uuid to the session
+			c.Conn.Locals("uuid", c.UUID)
+
 			c.Fire("info", make([]byte, 0))
+
 		},
 	))
 

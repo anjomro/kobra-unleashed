@@ -153,10 +153,8 @@ func SendCommand(payload *structs.MqttPayload) error {
 	return nil
 }
 
-type M map[string]interface{}
-
 // Subscribe to anything
-func HandleWebsocket() {
+func SubscribeToPrinter() {
 	// Subscribe to the printer messages
 
 	client := *GetMQTTClient()
@@ -186,14 +184,4 @@ func HandleWebsocket() {
 
 	slog.Info("MQTT", "Subscribed to topic", topic)
 
-	socketio.On("connection", func(ep *socketio.EventPayload) {
-		slog.Info("SOCKETIO: Client connected")
-	})
-
-	socketio.On("info", func(ep *socketio.EventPayload) {
-		payld := kobrautils.NewMqttPayload("status", "query", nil)
-		payld2 := kobrautils.NewMqttPayload("print", "update", M{"taskid": "0"})
-		SendCommand(payld)
-		SendCommand(payld2)
-	})
 }

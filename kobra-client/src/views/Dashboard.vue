@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import StatusCard from '@/components/StatusCard.vue';
 import { MqttResponse, PrintUpdate, Temperature } from '@/interfaces/mqtt';
+import { useUserStore } from '@/stores/store';
 import { ref } from 'vue';
 
 const isDev = import.meta.env.DEV;
+
+const userStore = useUserStore();
 
 interface PrinterState {
   state: string;
@@ -12,7 +15,7 @@ interface PrinterState {
   targetNozzleTemp: number | undefined;
   targetBedTemp: number | undefined;
   fanSpeed: number | undefined;
-  printSpeed: number | undefined;
+  printSpeed: string | undefined;
   zComp: string | undefined;
 }
 
@@ -30,6 +33,8 @@ const PrinterState = ref<PrinterState>({
 const wsURL = isDev ? 'ws://localhost:3000/ws/info' : 'ws://localhost/ws/info';
 
 const ws = new WebSocket(wsURL);
+
+userStore.registerWebSocket(ws);
 
 ws.onerror = (err) => {
   console.error('WebSocket Error:', err);
@@ -68,7 +73,22 @@ ws.onmessage = (e) => {
     PrinterState.value.targetBedTemp = temp.data.settings.target_hotbed_temp;
     PrinterState.value.targetNozzleTemp = temp.data.settings.target_nozzle_temp;
     PrinterState.value.fanSpeed = temp.data.settings.fan_speed_pct;
-    PrinterState.value.printSpeed = temp.data.settings.print_speed_mode;
+
+    switch (temp.data.settings.print_speed_mode) {
+      case 1:
+        PrinterState.value.printSpeed = 'Slow';
+        break;
+      case 2:
+        PrinterState.value.printSpeed = 'Normal';
+        break;
+      case 3:
+        PrinterState.value.printSpeed = 'Fast';
+        break;
+      default:
+        PrinterState.value.printSpeed = 'N/A';
+    }
+
+    // PrinterState.value.printSpeed = temp.data.settings.print_speed_mode;
     PrinterState.value.zComp = temp.data.settings.z_comp;
   }
 };

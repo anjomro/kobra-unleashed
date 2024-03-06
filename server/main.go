@@ -9,6 +9,7 @@ import (
 	"github.com/anjomro/kobra-unleashed/server/routes"
 	"github.com/anjomro/kobra-unleashed/server/sess"
 	"github.com/anjomro/kobra-unleashed/server/utils"
+	"github.com/anjomro/kobra-unleashed/server/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	slogfiber "github.com/samber/slog-fiber"
@@ -54,7 +55,9 @@ func main() {
 
 	routes.SetupRoutes(app)
 
-	mqtt.HandleWebsocket()
+	mqtt.SubscribeToPrinter()
+
+	websocket.SetupWebsocket()
 
 	app.Static("/", "/www")
 
