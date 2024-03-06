@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import StatusCard from '@/components/StatusCard.vue';
-import { MqttResponse, Temperature } from '@/interfaces/mqtt';
+import { MqttResponse, PrintUpdate, Temperature } from '@/interfaces/mqtt';
 import { ref } from 'vue';
 
 const isDev = import.meta.env.DEV;
@@ -11,6 +11,9 @@ interface PrinterState {
   currentBedTemp: number | undefined;
   targetNozzleTemp: number | undefined;
   targetBedTemp: number | undefined;
+  fanSpeed: number | undefined;
+  printSpeed: number | undefined;
+  zComp: string | undefined;
 }
 
 const PrinterState = ref<PrinterState>({
@@ -19,6 +22,9 @@ const PrinterState = ref<PrinterState>({
   currentBedTemp: undefined,
   targetNozzleTemp: undefined,
   targetBedTemp: undefined,
+  fanSpeed: undefined,
+  printSpeed: undefined,
+  zComp: undefined,
 });
 
 const wsURL = isDev ? 'ws://localhost:3000/ws/info' : 'ws://localhost/ws/info';
@@ -52,6 +58,19 @@ ws.onmessage = (e) => {
     PrinterState.value.targetBedTemp = temp.data.target_hotbed_temp;
     PrinterState.value.targetNozzleTemp = temp.data.target_nozzle_temp;
   }
+
+  if (mqttResponse.type === 'print' && mqttResponse.action === 'update') {
+    const temp: PrintUpdate = mqttResponse;
+    console.log('Print Update:', temp);
+
+    PrinterState.value.currentBedTemp = temp.data.curr_hotbed_temp;
+    PrinterState.value.currentNozzleTemp = temp.data.curr_nozzle_temp;
+    PrinterState.value.targetBedTemp = temp.data.settings.target_hotbed_temp;
+    PrinterState.value.targetNozzleTemp = temp.data.settings.target_nozzle_temp;
+    PrinterState.value.fanSpeed = temp.data.settings.fan_speed_pct;
+    PrinterState.value.printSpeed = temp.data.settings.print_speed_mode;
+    PrinterState.value.zComp = temp.data.settings.z_comp;
+  }
 };
 </script>
 
@@ -64,22 +83,35 @@ ws.onmessage = (e) => {
       </div>
       <RouterLink to="/logout">Logout</RouterLink>
     </div>
-
-    <div class="flex flex-wrap gap-4">
+    <!-- take all width. Only 1 col -->
+    <div class="grid grid-cols-5 gap-4 mt-4">
       <StatusCard
         title="Nozzle"
         :message="PrinterState.currentNozzleTemp?.toString()"
+        :submessage="`Target: ${
+          PrinterState.targetNozzleTemp?.toString() ?? 'N/A'
+        }`"
       />
       <StatusCard
         title="Hotbed"
         :message="PrinterState.currentBedTemp?.toString()"
+        :submessage="`Target: ${
+          PrinterState.targetBedTemp?.toString() ?? 'N/A'
+        }`"
       />
       <StatusCard
         title="Printer Status"
         :message="PrinterState.state"
         :displaysubmessage="false"
       />
-      <h2></h2>
+      <StatusCard
+        title="Speed Mode"
+        :message="PrinterState.printSpeed?.toString() ?? 'N/A'"
+      />
+      <StatusCard
+        title="Fan Speed"
+        :message="`${PrinterState.fanSpeed?.toString().concat('%') ?? 'N/A'}`"
+      />
     </div>
   </div>
 </template>

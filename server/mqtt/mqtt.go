@@ -153,6 +153,8 @@ func SendCommand(payload *structs.MqttPayload) error {
 	return nil
 }
 
+type M map[string]interface{}
+
 // Subscribe to anything
 func HandleWebsocket() {
 	// Subscribe to the printer messages
@@ -190,6 +192,8 @@ func HandleWebsocket() {
 
 	socketio.On("info", func(ep *socketio.EventPayload) {
 		payld := kobrautils.NewMqttPayload("status", "query", nil)
+		payld2 := kobrautils.NewMqttPayload("print", "update", M{"taskid": "0"})
 		SendCommand(payld)
+		SendCommand(payld2)
 	})
 }
