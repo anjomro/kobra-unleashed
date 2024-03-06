@@ -12,6 +12,8 @@ import (
 
 func LoginHandler(ctx *fiber.Ctx) error {
 
+	slog.Info("LOGIN ATTEMPT", "ip", ctx.IP())
+
 	// Get username and password from request body
 	var user structs.LoginUser
 	if err := ctx.BodyParser(&user); err != nil {

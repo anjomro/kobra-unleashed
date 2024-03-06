@@ -31,6 +31,7 @@ func SetupRoutes(app *fiber.App) {
 	router.Get("/version", versionHandler)
 	router.Put("/printer/settings", SetPrinterSettingsHandler)
 	router.Get("/printer/status", GetPrinterStatusHandler)
+	router.Get("/printer/log", GetLogHandler)
 
 	filehandler := router.Group("/files")
 	// /api/files/
