@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import StatusCard from '@/components/StatusCard.vue';
 import { MqttResponse, Temperature } from '@/interfaces/mqtt';
-import { useStorage } from '@vueuse/core';
+import { ref } from 'vue';
 
 const isDev = import.meta.env.DEV;
 
@@ -13,15 +13,7 @@ interface PrinterState {
   targetBedTemp: number | undefined;
 }
 
-// const printState = ref<PrinterState>({
-//   state: 'offline',
-//   currentNozzleTemp: undefined,
-//   currentBedTemp: undefined,
-//   targetNozzleTemp: undefined,
-//   targetBedTemp: undefined,
-// });
-
-const PrinterState = useStorage<PrinterState>('printer-state', {
+const PrinterState = ref<PrinterState>({
   state: 'offline',
   currentNozzleTemp: undefined,
   currentBedTemp: undefined,
