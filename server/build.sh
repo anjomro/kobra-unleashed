@@ -3,6 +3,7 @@
 # Set the target architecture
 export GOARCH=arm
 export GOARM=7
+# export CGO_ENABLED=1
 
 PRINTER_IP="10.0.2.249"
 
@@ -10,7 +11,8 @@ PRINTER_IP="10.0.2.249"
 # export GOOS=linux
 
 # Set the path to the Go compiler for ARM
-export CC=arm-linux-gnueabihf-gcc
+# export CC="zig cc -target arm-linux-gnueabihf"
+# export CXX="zig c++ -target arm-linux-gnueabihf"
 
 # If no dist then create it
 if [ ! -d "dist" ]; then

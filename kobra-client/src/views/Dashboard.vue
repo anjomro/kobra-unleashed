@@ -143,6 +143,8 @@ ws.onmessage = (e) => {
         :message="PrinterState.zComp?.toString() ?? 'N/A'"
       />
     </div>
+
+    <img src="http://localhost:3000/api/printer/camera" alt="" />
   </div>
 </template>
 
