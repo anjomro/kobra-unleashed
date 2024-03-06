@@ -28,10 +28,10 @@ export interface MqttResponse {
 }
 
 export interface MqttTempatureData {
-  currHotbedTemp: number;
-  currNozzleTemp: number;
-  targetHotbedTemp: number;
-  targetNozzleTemp: number;
+  curr_hotbed_temp: number;
+  curr_nozzle_temp: number;
+  target_hotbed_temp: number;
+  target_nozzle_temp: number;
 }
 
 // Temperature interface that extends the MqttResponse interface
