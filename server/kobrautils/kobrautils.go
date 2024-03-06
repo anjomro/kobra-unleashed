@@ -1,6 +1,7 @@
 package kobrautils
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
@@ -62,4 +63,26 @@ func NewMqttPayload(typeStr string, actionStr string, data interface{}) *structs
 		Action:    actionStr,
 		Data:      data,
 	}
+}
+
+func MqttFormatData(mqttResponse structs.MqttResponse, mqttDataType interface{}) (interface{}, error) {
+	// Format the mqtt response to the correct type
+
+	// Take original mqttResponse and attach the data to it and return it
+
+	// Convert the data to interface
+	dataBytes, err := json.Marshal(mqttResponse.Data)
+	if err != nil {
+		return nil, nil
+	}
+
+	// Unmarshal the data into the correct type
+	err = json.Unmarshal(dataBytes, &mqttDataType)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return modified mqttResponse
+	mqttResponse.Data = mqttDataType
+	return mqttResponse, nil
 }

@@ -3,6 +3,7 @@ package routes
 import (
 	"bufio"
 	"encoding/json"
+	"log/slog"
 	"os/exec"
 
 	"github.com/anjomro/kobra-unleashed/server/mqtt"
@@ -112,8 +113,6 @@ func GetPrinterMessageHandler(c *websocket.Conn) {
 		// Decode the message json into the MqttResponse struct
 		var mqttResp structs.MqttResponse
 
-		mqttResp.Data = structs.MqttTempatureData{}
-
 		// Unmarshal json
 		err := json.Unmarshal(<-mqttChannel, &mqttResp)
 		if err != nil {
@@ -122,8 +121,9 @@ func GetPrinterMessageHandler(c *websocket.Conn) {
 		}
 
 		// Send the message to the browser
-		c.WriteJSON(mqttResp)
-
-		// End
+		err = c.WriteJSON(mqttResp)
+		if err != nil {
+			slog.Error("Error writing to websocket ", "WriteJSON", err)
+		}
 	}
 }
