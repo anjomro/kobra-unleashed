@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/anjomro/kobra-unleashed/server/kobrautils"
+	"github.com/gofiber/contrib/socketio"
 
 	"github.com/anjomro/kobra-unleashed/server/structs"
 	"github.com/anjomro/kobra-unleashed/server/utils"
@@ -27,7 +28,7 @@ var (
 	MQTTClient *MQTT.Client
 
 	// byte channel
-	globalMqttChannel = make(chan []byte)
+
 )
 
 func NewTLSConfig() *tls.Config {
@@ -153,29 +154,42 @@ func SendCommand(payload *structs.MqttPayload) error {
 }
 
 // Subscribe to anything
-func SubscribeToPrinterMessages() error {
+func HandleWebsocket() {
 	// Subscribe to the printer messages
 
 	client := *GetMQTTClient()
 	topic, err := getPublicTopic()
 	if err != nil {
-		return err
+		slog.Error("Error getting public topic", "err", err)
 	}
 
 	topic = topic + "/#"
 
 	token := client.Subscribe(topic, 0, func(client MQTT.Client, msg MQTT.Message) {
 		// Push the message to the channel
-		globalMqttChannel <- msg.Payload()
+		// globalMqttChannel <- msg.Payload()
+		// Convert payload  to byte
+
+		payload := map[string]interface{}{"message": msg.Payload()}
+		payloadBytes, err := json.Marshal(payload)
+		if err != nil {
+			// handle error
+			return
+		}
+
+		socketio.Broadcast(payloadBytes, socketio.TextMessage)
 	})
 
 	token.Wait()
 
 	slog.Info("MQTT", "Subscribed to topic", topic)
 
-	return nil
-}
+	socketio.On("connection", func(ep *socketio.EventPayload) {
+		slog.Info("SOCKETIO: Client connected")
+	})
 
-func SubscribeToMqttChannel() chan []byte {
-	return globalMqttChannel
+	socketio.On("info", func(ep *socketio.EventPayload) {
+		payld := kobrautils.NewMqttPayload("status", "query", nil)
+		SendCommand(payld)
+	})
 }

@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"log/slog"
+	"time"
+
 	"github.com/anjomro/kobra-unleashed/server/sess"
 	"github.com/anjomro/kobra-unleashed/server/structs"
 	"github.com/anjomro/kobra-unleashed/server/utils"
@@ -31,12 +34,18 @@ func LoginHandler(ctx *fiber.Ctx) error {
 
 	sess.Set("authenticated", true)
 
+	expireTime := time.Now().Add(24 * time.Hour)
+
 	if user.Remember {
 		sess.SetExpiry(60 * 60 * 24 * 5) // 5 Days
+		expireTime = time.Now().Add(24 * time.Hour * 5)
 	}
+
+	// Default value 24 * time.Hour
 
 	err := sess.Save()
 	if err != nil {
+		slog.Error("Error saving session", "error", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Error saving session",
 		})
@@ -46,6 +55,7 @@ func LoginHandler(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Logged in",
+		"expires": expireTime.Unix(),
 	})
 
 }

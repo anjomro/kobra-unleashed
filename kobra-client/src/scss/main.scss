@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#app {
+  @apply w-full h-full;
+}
+
+body {
+  @apply dark:bg-neutral-800 dark:text-neutral-200;
+}
+
+.page {
+  @apply w-full h-full;
+}

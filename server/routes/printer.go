@@ -2,6 +2,8 @@ package routes
 
 import (
 	"github.com/anjomro/kobra-unleashed/server/kobraprinter"
+	"github.com/anjomro/kobra-unleashed/server/kobrautils"
+	"github.com/anjomro/kobra-unleashed/server/mqtt"
 	"github.com/anjomro/kobra-unleashed/server/structs"
 	"github.com/gofiber/fiber/v2"
 )
@@ -32,6 +34,17 @@ func SetPrinterSettingsHandler(c *fiber.Ctx) error {
 	// Send the settings to the printer
 	err = kobraprinter.UpdatePrintSettings(printerSettings.Taskid, settings)
 
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	} else {
+		return c.SendStatus(200)
+	}
+}
+
+func GetPrinterStatusHandler(c *fiber.Ctx) error {
+	// Post the printer status from mqtt
+	payld := kobrautils.NewMqttPayload("status", "query", nil)
+	err := mqtt.SendCommand(payld)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	} else {

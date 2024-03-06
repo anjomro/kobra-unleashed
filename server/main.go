@@ -37,9 +37,9 @@ func main() {
 		return c.Next()
 	})
 
-	mqtt.SubscribeToPrinterMessages()
-
 	routes.SetupRoutes(app)
+
+	mqtt.HandleWebsocket()
 
 	app.Static("/", "/www")
 

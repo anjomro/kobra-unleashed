@@ -2,15 +2,26 @@ package routes
 
 import (
 	"github.com/anjomro/kobra-unleashed/server/middleware"
+	"github.com/gofiber/contrib/socketio"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 )
 
 func SetupRoutes(app *fiber.App) {
 
-	ws := app.Group("/ws").Use(middleware.AuthHandler, websocketHandler)
-	ws.Get("/shell", websocket.New(websocketShellHandler))
-	ws.Get("/info", websocket.New(GetPrinterMessageHandler))
+	ws := app.Group("/ws").Use(func(c *fiber.Ctx) error {
+		if websocket.IsWebSocketUpgrade(c) {
+			c.Locals("allowed", true)
+			return c.Next()
+		}
+		return fiber.ErrUpgradeRequired
+	})
+
+	ws.Get("/info", socketio.New(
+		func(c *socketio.Websocket) {
+			c.Fire("info", make([]byte, 0))
+		},
+	))
 
 	app.Post("/api/login", LoginHandler).Post("/api/logout", middleware.AuthHandler, LogoutHandler)
 
@@ -19,6 +30,7 @@ func SetupRoutes(app *fiber.App) {
 
 	router.Get("/version", versionHandler)
 	router.Put("/printer/settings", SetPrinterSettingsHandler)
+	router.Get("/printer/status", GetPrinterStatusHandler)
 
 	filehandler := router.Group("/files")
 	// /api/files/
