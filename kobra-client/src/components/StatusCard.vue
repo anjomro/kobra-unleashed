@@ -21,6 +21,6 @@ const props = defineProps({
 
 <style lang="scss" scoped>
 .status-card {
-  @apply shadow-md rounded-lg p-4 dark:bg-neutral-600;
+  @apply shadow-md rounded-lg p-4 dark:bg-neutral-600 bg-neutral-200;
 }
 </style>
