@@ -87,16 +87,16 @@ ws.onmessage = (e) => {
     <div class="grid grid-cols-5 gap-4 mt-4">
       <StatusCard
         title="Nozzle"
-        :message="PrinterState.currentNozzleTemp?.toString()"
+        :message="PrinterState.currentNozzleTemp?.toString().concat(' °C')"
         :submessage="`Target: ${
-          PrinterState.targetNozzleTemp?.toString() ?? 'N/A'
+          PrinterState.targetNozzleTemp?.toString().concat(' °C') ?? 'N/A'
         }`"
       />
       <StatusCard
         title="Hotbed"
-        :message="PrinterState.currentBedTemp?.toString()"
+        :message="PrinterState.currentBedTemp?.toString().concat(' °C')"
         :submessage="`Target: ${
-          PrinterState.targetBedTemp?.toString() ?? 'N/A'
+          PrinterState.targetBedTemp?.toString().concat(' °C') ?? 'N/A'
         }`"
       />
       <StatusCard

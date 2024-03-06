@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"time"
 )
 
 // Storage interface that is implemented by storage providers
 type Storage struct {
-	filePath string
-	data     map[string][]byte
+	folderPath string
+	data       map[string][]byte
 }
 
 // New creates a new file storage
@@ -22,18 +23,18 @@ func New(config ...Config) *Storage {
 		panic(err)
 	}
 	return &Storage{
-		filePath: cfg.Folder,
-		data:     data,
+		folderPath: cfg.Folder,
+		data:       data,
 	}
 }
 
 // loadFromFile loads data from the specified file
-func loadFromFile(filePath string) (map[string][]byte, error) {
+func loadFromFile(folderPath string) (map[string][]byte, error) {
 	data := make(map[string][]byte)
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+	if _, err := os.Stat(folderPath); os.IsNotExist(err) {
 		return data, nil
 	}
-	file, err := os.Open(filePath)
+	file, err := os.Open(path.Join(folderPath, "session.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +92,15 @@ func (s *Storage) saveToFile() error {
 	if err != nil {
 		return fmt.Errorf("error marshaling data: %w", err)
 	}
-	return os.WriteFile(s.filePath, bytes, 0644)
+
+	// Check if folder exists if not create it
+	if _, err := os.Stat(s.folderPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(s.folderPath, 0755); err != nil {
+			return fmt.Errorf("error creating folder: %w", err)
+		}
+	}
+
+	return os.WriteFile(path.Join(s.folderPath, "session.json"), bytes, 0644)
 }
 
 // Close connection (no-op for file storage)

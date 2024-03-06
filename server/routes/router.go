@@ -9,7 +9,7 @@ import (
 
 func SetupRoutes(app *fiber.App) {
 
-	ws := app.Group("/ws").Use(func(c *fiber.Ctx) error {
+	ws := app.Group("/ws").Use(middleware.AuthHandler, func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
 			c.Locals("allowed", true)
 			return c.Next()
@@ -25,15 +25,15 @@ func SetupRoutes(app *fiber.App) {
 
 	app.Post("/api/login", LoginHandler).Post("/api/logout", middleware.AuthHandler, LogoutHandler)
 
-	// Create a router with base path /api
-	router := app.Group("/api").Use(middleware.AuthHandler)
+	// Create a api with base path /api
+	api := app.Group("/api").Use(middleware.AuthHandler)
 
-	router.Get("/version", versionHandler)
-	router.Put("/printer/settings", SetPrinterSettingsHandler)
-	router.Get("/printer/status", GetPrinterStatusHandler)
-	router.Get("/printer/log", GetLogHandler)
+	api.Get("/version", versionHandler)
+	api.Put("/printer/settings", SetPrinterSettingsHandler)
+	api.Get("/printer/status", GetPrinterStatusHandler)
+	api.Get("/printer/log", GetLogHandler)
 
-	filehandler := router.Group("/files")
+	filehandler := api.Group("/files")
 	// /api/files/
 	filehandler.Post("/local", localFilesHandlerPOST)
 	filehandler.Post("/sdcard", sdcardFilesHandlerPOST)

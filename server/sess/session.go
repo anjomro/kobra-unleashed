@@ -12,7 +12,7 @@ func SetupSessionStore() {
 	// Create a new session store
 	store = session.New(session.Config{
 		Storage: storage.New(storage.Config{
-			Folder: "./.sessions",
+			Folder: "/mnt/UDISK/sessions",
 		}),
 	})
 }
