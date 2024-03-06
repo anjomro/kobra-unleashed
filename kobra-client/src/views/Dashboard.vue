@@ -45,6 +45,12 @@ ws.onopen = () => {
 };
 
 ws.onmessage = (e) => {
+  // return if pong
+  if (e.data === 'pong') {
+    console.log('Pong received');
+
+    return;
+  }
   const data = JSON.parse(e.data);
   const message = atob(data.message);
 
@@ -98,13 +104,13 @@ ws.onmessage = (e) => {
   <div class="page p-4">
     <div class="flex items-center justify-between">
       <div>
-        <h1>Kobra Unleashed</h1>
+        <h1 class="text-3xl font-bold">Kobra Unleashed</h1>
         <p>Welcome to your dashboard</p>
       </div>
       <RouterLink to="/logout">Logout</RouterLink>
     </div>
     <!-- take all width. Only 1 col -->
-    <div class="grid grid-cols-5 gap-4 mt-4">
+    <div class="card-container">
       <StatusCard
         title="Nozzle"
         :message="PrinterState.currentNozzleTemp?.toString().concat(' °C')"
@@ -132,8 +138,18 @@ ws.onmessage = (e) => {
         title="Fan Speed"
         :message="`${PrinterState.fanSpeed?.toString().concat('%') ?? 'N/A'}`"
       />
+      <StatusCard
+        title="Z Compensation"
+        :message="PrinterState.zComp?.toString() ?? 'N/A'"
+      />
     </div>
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.card-container {
+  @apply grid gap-4 mt-4;
+  // grid-auto-flow: column; Do this but if too small make it stack vertically
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+</style>

@@ -8,10 +8,21 @@ export const useUserStore = defineStore('user', () => {
 
   // Make onlogout callback that takes in a websocket and closes it
 
-  const webSockets = ref<WebSocket[]>([]);
+  interface IWebSocket {
+    client: WebSocket;
+    pingInterval: number;
+  }
+
+  const webSockets = ref<IWebSocket[]>([]);
 
   const registerWebSocket = (ws: WebSocket) => {
-    webSockets.value.push(ws);
+    // Ping server every 20 seconds to keep connection alive
+    const pingInterval = setInterval(() => {
+      ws.send('ping');
+      console.log('Ping sent');
+    }, 20000);
+
+    webSockets.value.push({ client: ws, pingInterval });
   };
 
   async function logout(callback: Function) {
@@ -19,8 +30,9 @@ export const useUserStore = defineStore('user', () => {
 
     if (webSockets.value.length > 0) {
       webSockets.value.forEach((ws) => {
-        console.log('Closing websocket', ws.url);
-        ws.close();
+        console.log('Closing websocket', ws.client.url);
+        ws.client.close();
+        clearInterval(ws.pingInterval);
       });
     }
 

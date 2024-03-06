@@ -18,11 +18,7 @@ func SetupRoutes(app *fiber.App) {
 
 	ws.Get("/info", socketio.New(
 		func(c *socketio.Websocket) {
-			// Set uuid to the session
-			c.Conn.Locals("uuid", c.UUID)
-
 			c.Fire("info", make([]byte, 0))
-
 		},
 	))
 
