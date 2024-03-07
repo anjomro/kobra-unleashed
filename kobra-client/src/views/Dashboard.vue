@@ -2,22 +2,13 @@
 import StatusCard from '@/components/StatusCard.vue';
 import { MqttResponse, PrintUpdate, Temperature } from '@/interfaces/mqtt';
 import { useUserStore } from '@/stores/store';
-import { ref } from 'vue';
+import { PrinterState } from '@/interfaces/printer';
+import { onMounted, ref } from 'vue';
+import LogoutIcon from '~icons/carbon/logout';
 
 const isDev = import.meta.env.DEV;
 
 const userStore = useUserStore();
-
-interface PrinterState {
-  state: string;
-  currentNozzleTemp: number | undefined;
-  currentBedTemp: number | undefined;
-  targetNozzleTemp: number | undefined;
-  targetBedTemp: number | undefined;
-  fanSpeed: number | undefined;
-  printSpeed: string | undefined;
-  zComp: string | undefined;
-}
 
 const PrinterState = ref<PrinterState>({
   state: 'offline',
@@ -91,13 +82,24 @@ ws.onmessage = (e) => {
         PrinterState.value.printSpeed = 'Fast';
         break;
       default:
-        PrinterState.value.printSpeed = 'N/A';
+        PrinterState.value.printSpeed =
+          temp.data.settings.print_speed_mode.toString();
     }
 
     // PrinterState.value.printSpeed = temp.data.settings.print_speed_mode;
     PrinterState.value.zComp = temp.data.settings.z_comp;
   }
 };
+
+// Get username
+onMounted(async () => {
+  const response = await fetch('/api/user');
+  const data = await response.json();
+  // get username if ok
+  if (response.ok) {
+    userStore.$patch({ username: data.username });
+  }
+});
 </script>
 
 <template>
@@ -105,9 +107,12 @@ ws.onmessage = (e) => {
     <div class="flex items-center justify-between">
       <div>
         <h1 class="text-3xl font-bold">Kobra Unleashed</h1>
-        <p>Welcome to your dashboard</p>
+        <p>Welcome to your dashboard. Logged in as {{ userStore.username }}</p>
       </div>
-      <RouterLink to="/logout">Logout</RouterLink>
+      <button class="btn btn-primary"></button>
+      <RouterLink to="/logout">
+        <LogoutIcon class="w-8 h-8" />
+      </RouterLink>
     </div>
     <!-- take all width. Only 1 col -->
     <div class="card-container">
@@ -143,8 +148,6 @@ ws.onmessage = (e) => {
         :message="PrinterState.zComp?.toString() ?? 'N/A'"
       />
     </div>
-
-    <img src="http://localhost:3000/api/printer/camera" alt="" />
   </div>
 </template>
 

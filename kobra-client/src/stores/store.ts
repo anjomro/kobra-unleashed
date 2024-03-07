@@ -5,6 +5,7 @@ import { ref } from 'vue';
 export const useUserStore = defineStore('user', () => {
   const auth = useStorage<boolean>('auth', false);
   const authExpiryDate = useStorage<number>('authExpiryDate', 0);
+  const username = ref('N/A');
 
   // Make onlogout callback that takes in a websocket and closes it
 
@@ -51,5 +52,5 @@ export const useUserStore = defineStore('user', () => {
     callback({ name: 'Login' });
   }
 
-  return { auth, authExpiryDate, logout, registerWebSocket };
+  return { auth, authExpiryDate, username, logout, registerWebSocket };
 });

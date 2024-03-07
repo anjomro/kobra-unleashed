@@ -28,6 +28,7 @@ func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api").Use(middleware.AuthHandler)
 
 	api.Get("/version", versionHandler)
+	api.Get("/user", GetUserInfo)
 	api.Put("/printer/settings", SetPrinterSettingsHandler)
 	api.Get("/printer/status", GetPrinterStatusHandler)
 	api.Get("/printer/log", GetLogHandler)
