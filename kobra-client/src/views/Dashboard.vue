@@ -25,14 +25,13 @@ const wsURL = isDev ? 'ws://localhost:3000/ws/info' : 'ws://localhost/ws/info';
 
 const ws = new WebSocket(wsURL);
 
-userStore.registerWebSocket(ws);
-
 ws.onerror = (err) => {
   console.error('WebSocket Error:', err);
 };
 
 ws.onopen = () => {
   console.log('WebSocket Client Connected');
+  userStore.registerWebSocket(ws);
 };
 
 ws.onmessage = (e) => {
