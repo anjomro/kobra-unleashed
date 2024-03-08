@@ -47,7 +47,7 @@ func SetPrinterSettingsHandler(c *fiber.Ctx) error {
 func GetPrinterStatusHandler(c *fiber.Ctx) error {
 	// Post the printer status from mqtt
 	payld := kobrautils.NewMqttPayload("status", "query", nil)
-	err := mqtt.SendCommand(payld)
+	err := mqtt.SendCommand(payld, "status")
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	} else {
