@@ -33,6 +33,7 @@
       <StatusCard
         title="Nozzle"
         :message="PrinterState.currentNozzleTemp?.toString().concat(' °C')"
+        :displaysubmessage="true"
         :submessage="`Target: ${
           PrinterState.targetNozzleTemp?.toString().concat(' °C') ?? 'N/A'
         }`"
@@ -41,6 +42,7 @@
       <StatusCard
         title="Hotbed"
         :message="PrinterState.currentBedTemp?.toString().concat(' °C')"
+        :displaysubmessage="true"
         :submessage="`Target: ${
           PrinterState.targetBedTemp?.toString().concat(' °C') ?? 'N/A'
         }`"
@@ -49,7 +51,6 @@
       <StatusCard
         title="Printer Status"
         :message="PrinterState.state"
-        :displaysubmessage="false"
         :bgcolor="tempColor?.status"
       />
       <StatusCard

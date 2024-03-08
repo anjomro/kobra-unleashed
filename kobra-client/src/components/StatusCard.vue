@@ -3,7 +3,7 @@ const props = defineProps({
   title: { type: String, required: true },
   message: String,
   submessage: String,
-  displaysubmessage: { type: Boolean, default: true },
+  displaysubmessage: Boolean,
   bgcolor: String,
 });
 </script>
