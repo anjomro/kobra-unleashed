@@ -278,10 +278,10 @@ func SetupWebsocket() {
 	socketio.On("info", func(ep *socketio.EventPayload) {
 		payld := kobrautils.NewMqttPayload("status", "query", nil)
 		payld2 := kobrautils.NewMqttPayload("print", "update", M{"taskid": "0"})
-		if err := mqtt.SendCommand(payld); err != nil {
+		if err := mqtt.SendCommand(payld, "status"); err != nil {
 			slog.Error(err.Error())
 		}
-		if err := mqtt.SendCommand(payld2); err != nil {
+		if err := mqtt.SendCommand(payld2, "print"); err != nil {
 			slog.Error(err.Error())
 		}
 	})

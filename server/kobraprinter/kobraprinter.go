@@ -22,7 +22,7 @@ func ListFiles(pathType string, path string) error {
 
 	payld := kobrautils.NewMqttPayload("file", pathType, map[string]interface{}{"path": path})
 
-	err := mqtt.SendCommand(payld)
+	err := mqtt.SendCommand(payld, "file")
 
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func ListFiles(pathType string, path string) error {
 func UpdatePrintSettings(taskid string, settings structs.PrintSettings) error {
 	payld := kobrautils.NewMqttPayload("print", "update", map[string]interface{}{"taskid": taskid, "settings": settings})
 
-	err := mqtt.SendCommand(payld)
+	err := mqtt.SendCommand(payld, "print")
 
 	if err != nil {
 		return err

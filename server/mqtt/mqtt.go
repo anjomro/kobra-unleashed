@@ -84,7 +84,7 @@ func GetMQTTClient() *MQTT.Client {
 	return MQTTClient
 }
 
-func getCommandTopic() (string, error) {
+func getCommandTopic(action string) (string, error) {
 	// Returns the topic where a command should be published
 	printerModel, err := kobrautils.GetPrinterModel()
 	if err != nil {
@@ -96,7 +96,7 @@ func getCommandTopic() (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/%s/%s", printerModel, printerId), nil
+	return fmt.Sprintf("anycubic/anycubicCloud/v1/server/printer/%s/%s/%s", printerModel, printerId, action), nil
 }
 
 func getPublicTopic() (string, error) {
@@ -114,7 +114,7 @@ func getPublicTopic() (string, error) {
 	return fmt.Sprintf("anycubic/anycubicCloud/v1/printer/public/%s/%s", printerModel, printerId), nil
 }
 
-func SendCommand(payload *structs.MqttPayload) error {
+func SendCommand(payload *structs.MqttPayload, action string) error {
 	// Generate a UUID
 	msgID := uuid.New().String()
 
@@ -140,7 +140,7 @@ func SendCommand(payload *structs.MqttPayload) error {
 
 	client := *GetMQTTClient()
 	// Publish the message to the MQTT topic
-	topic, err := getCommandTopic()
+	topic, err := getCommandTopic(action)
 	if err != nil {
 		return err
 	}
