@@ -154,9 +154,6 @@ const convertTimestamp = (timestamp: number) => {
 const selectedFile = ref<MqttFileListRecord | null>(null);
 
 onMounted(async () => {
-  await fetch('/api/files?pathType=listLocal');
-  await fetch('/api/files?pathType=listUdisk');
-
   ws?.send(
     JSON.stringify({
       action: 'watchUSB',
