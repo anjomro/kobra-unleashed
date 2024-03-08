@@ -32,9 +32,9 @@ app.config['MQTT_CLIENT_ID'] = f'kobra-unleashed-{random.randint(0, 1000)}'
 app.config['MQTT_REFRESH_TIME'] = 0.5  # refresh time in seconds
 app.config['MQTT_TLS_ENABLED'] = True  # set TLS to enabled for MQTT
 app.config['MQTT_TLS_VERSION'] = ssl.PROTOCOL_TLSv1_2
-app.config['MQTT_TLS_CA_CERTS'] = os.getenv("MQTT_CA", "/app/certs/ca.crt")
-app.config['MQTT_TLS_CERTFILE'] = os.getenv("MQTT_CERT", "/app/certs/client.crt")
-app.config['MQTT_TLS_KEYFILE'] = os.getenv("MQTT_KEY", "/app/certs/client.key")
+app.config['MQTT_TLS_CA_CERTS'] = os.getenv("MQTT_CA", "/app/certs/verification_cert.pem")
+app.config['MQTT_TLS_CERTFILE'] = os.getenv("MQTT_CERT", "/app/certs/verification_cert.pem")
+app.config['MQTT_TLS_KEYFILE'] = os.getenv("MQTT_KEY", "/app/certs/verification_cert.key")
 app.config['MQTT_TLS_INSECURE'] = True
 # CORS_HOST = os.getenv("CORS_HOST", "http://127.0.0.1:5000")
 
