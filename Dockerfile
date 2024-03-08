@@ -9,7 +9,6 @@ FROM alpine as intermediate
 RUN apk add openssl
 WORKDIR /certs
 COPY ./certs/generate_certs.sh /certs/generate_certs.sh
-RUN ls /certs
 RUN sh /certs/generate_certs.sh
 
 FROM alpine
