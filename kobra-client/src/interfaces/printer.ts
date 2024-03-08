@@ -6,5 +6,5 @@ export interface PrinterState {
   targetBedTemp: number | undefined;
   fanSpeed: number | undefined;
   printSpeed: number | undefined;
-  zComp: number | undefined;
+  zComp: string | undefined;
 }

@@ -26,6 +26,13 @@ body {
     }
   }
 
+  &.btn-danger {
+    @apply bg-red-600 text-white;
+    &:hover {
+      @apply bg-red-700;
+    }
+  }
+
   &.btn-hover-danger:hover {
     @apply hover:bg-red-600;
   }
@@ -33,4 +40,17 @@ body {
   &.icon {
     @apply gap-x-2;
   }
+}
+
+// Scrollbar
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-neutral-400 rounded-md;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
 }

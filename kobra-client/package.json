@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@vueuse/core": "^10.9.0",
+    "codemirror": "^6.0.1",
+    "luxon": "^3.4.4",
     "pinia": "^2.1.7",
     "vue": "^3.4.19",
     "vue-router": "4"
@@ -17,6 +19,13 @@
   "devDependencies": {
     "@iconify-json/carbon": "^1.1.31",
     "@iconify-json/cbi": "^1.1.7",
+    "@iconify-json/ic": "^1.1.17",
+    "@iconify-json/icon-park": "^1.1.13",
+    "@iconify-json/icon-park-solid": "^1.1.14",
+    "@iconify-json/lets-icons": "^1.1.2",
+    "@iconify-json/mdi": "^1.1.64",
+    "@iconify-json/system-uicons": "^1.1.12",
+    "@types/luxon": "^3.4.2",
     "@types/node": "^20.11.24",
     "@vitejs/plugin-vue": "^5.0.4",
     "autoprefixer": "^10.4.18",

@@ -1,14 +1,93 @@
+<template>
+  <div class="page p-4">
+    <Teleport to="body">
+      <FilesModal v-if="showFilesModal" @close="showFilesModal = false" />
+    </Teleport>
+    <div
+      class="flex items-center justify-between flex-col md:flex-row gap-y-2 md:gap-y-0"
+    >
+      <div>
+        <h1 class="text-3xl font-bold">Kobra Unleashed</h1>
+        <p>Welcome to your dashboard. Logged in as {{ userStore.username }}</p>
+      </div>
+      <div
+        class="flex gap-x-2 flex-col md:flex-row gap-y-2 md:gap-y-0 w-full md:w-auto"
+      >
+        <button class="btn btn-primary icon">
+          <PrintIcon class="w-8 h-8" />
+          <p>New Print</p>
+        </button>
+        <button class="btn btn-primary icon" @click="showFilesModal = true">
+          <FileIcon class="w-8 h-8" />
+          <p>Files</p>
+        </button>
+
+        <button class="btn icon btn-hover-danger" @click="userStore.logout">
+          <LogoutIcon class="w-8 h-8" />
+          <p>Logout</p>
+        </button>
+      </div>
+    </div>
+    <!-- take all width. Only 1 col -->
+    <div class="card-container">
+      <StatusCard
+        title="Nozzle"
+        :message="PrinterState.currentNozzleTemp?.toString().concat(' °C')"
+        :submessage="`Target: ${
+          PrinterState.targetNozzleTemp?.toString().concat(' °C') ?? 'N/A'
+        }`"
+        :bgcolor="tempColor?.nozzle"
+      />
+      <StatusCard
+        title="Hotbed"
+        :message="PrinterState.currentBedTemp?.toString().concat(' °C')"
+        :submessage="`Target: ${
+          PrinterState.targetBedTemp?.toString().concat(' °C') ?? 'N/A'
+        }`"
+        :bgcolor="tempColor?.bed"
+      />
+      <StatusCard
+        title="Printer Status"
+        :message="PrinterState.state"
+        :displaysubmessage="false"
+        :bgcolor="tempColor?.status"
+      />
+      <StatusCard
+        title="Speed Mode"
+        :message="
+          PrinterState.printSpeed === 1
+            ? 'Slow'
+            : PrinterState.printSpeed === 2
+            ? 'Normal'
+            : PrinterState.printSpeed === 3
+            ? 'Fast'
+            : PrinterState.printSpeed?.toString() ?? 'N/A'
+        "
+      />
+      <StatusCard
+        title="Fan Speed"
+        :message="`${PrinterState.fanSpeed?.toString().concat('%') ?? 'N/A'}`"
+        :bgcolor="tempColor?.fan"
+      />
+      <StatusCard
+        title="Z Compensation"
+        :message="PrinterState.zComp?.toString() ?? 'N/A'"
+        :bgcolor="tempColor?.zComp"
+      />
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { MqttResponse, PrintUpdate, Temperature } from '@/interfaces/mqtt';
 import { useUserStore } from '@/stores/store';
 import { PrinterState } from '@/interfaces/printer';
-import { onMounted, ref, watchEffect } from 'vue';
+import { onMounted, ref, watchEffect, Teleport } from 'vue';
 import StatusCard from '@/components/StatusCard.vue';
 import LogoutIcon from '~icons/carbon/logout';
 import FileIcon from '~icons/carbon/volume-file-storage';
 import PrintIcon from '~icons/cbi/3dprinter-standby';
-
-const isDev = import.meta.env.DEV;
+import FilesModal from '@/components/FilesModal.vue';
 
 const userStore = useUserStore();
 
@@ -41,57 +120,61 @@ const tempColor = ref<ITempColor>({
   zComp: '',
 });
 
-const wsURL = isDev ? 'ws://localhost:3000/ws/info' : 'ws://localhost/ws/info';
-const ws = new WebSocket(wsURL);
+userStore.createWebSocket();
 
-ws.onerror = (err) => {
-  console.error('WebSocket Error:', err);
-};
+const ws = userStore.websock?.ws;
 
-ws.onopen = () => {
-  console.log('WebSocket Client Connected');
-  userStore.registerWebSocket(ws);
-};
+if (ws) {
+  ws.onerror = (err) => {
+    console.error('WebSocket Error:', err);
+  };
 
-ws.onmessage = (e) => {
-  // return if pong
-  if (e.data === 'pong') {
-    console.log('Pong received');
+  ws.onopen = () => {
+    console.log('WebSocket Client Connected');
+  };
 
-    return;
-  }
-  const data = JSON.parse(e.data);
-  const message = atob(data.message);
+  ws.addEventListener('message', (e) => {
+    // return if pong
+    if (e.data === 'pong') {
+      console.log('Pong received');
 
-  const mqttResponse: MqttResponse = JSON.parse(message);
-  console.log('Received:', mqttResponse);
+      return;
+    }
+    const data = JSON.parse(e.data);
+    const message = atob(data.message);
 
-  if (mqttResponse.type === 'status' && mqttResponse.action === 'workReport') {
-    PrinterState.value.state = mqttResponse.state;
-  }
+    const mqttResponse: MqttResponse = JSON.parse(message);
 
-  if (mqttResponse.type === 'tempature' && mqttResponse.action === 'report') {
-    // Set mqttResponse to Temperature interface
-    const temp: Temperature = mqttResponse;
-    PrinterState.value.currentBedTemp = temp.data.curr_hotbed_temp;
-    PrinterState.value.currentNozzleTemp = temp.data.curr_nozzle_temp;
-    PrinterState.value.targetBedTemp = temp.data.target_hotbed_temp;
-    PrinterState.value.targetNozzleTemp = temp.data.target_nozzle_temp;
-  }
+    if (
+      mqttResponse.type === 'status' &&
+      mqttResponse.action === 'workReport'
+    ) {
+      PrinterState.value.state = mqttResponse.state;
+    }
 
-  if (mqttResponse.type === 'print' && mqttResponse.action === 'update') {
-    const temp: PrintUpdate = mqttResponse;
-    console.log('Print Update:', temp);
+    if (mqttResponse.type === 'tempature' && mqttResponse.action === 'report') {
+      // Set mqttResponse to Temperature interface
+      const temp: Temperature = mqttResponse;
+      PrinterState.value.currentBedTemp = temp.data.curr_hotbed_temp;
+      PrinterState.value.currentNozzleTemp = temp.data.curr_nozzle_temp;
+      PrinterState.value.targetBedTemp = temp.data.target_hotbed_temp;
+      PrinterState.value.targetNozzleTemp = temp.data.target_nozzle_temp;
+    }
 
-    PrinterState.value.currentBedTemp = temp.data.curr_hotbed_temp;
-    PrinterState.value.currentNozzleTemp = temp.data.curr_nozzle_temp;
-    PrinterState.value.targetBedTemp = temp.data.settings.target_hotbed_temp;
-    PrinterState.value.targetNozzleTemp = temp.data.settings.target_nozzle_temp;
-    PrinterState.value.fanSpeed = temp.data.settings.fan_speed_pct;
-    PrinterState.value.printSpeed = temp.data.settings.print_speed_mode;
-    PrinterState.value.zComp = temp.data.settings.z_comp;
-  }
-};
+    if (mqttResponse.type === 'print' && mqttResponse.action === 'update') {
+      const temp: PrintUpdate = mqttResponse;
+
+      PrinterState.value.currentBedTemp = temp.data.curr_hotbed_temp;
+      PrinterState.value.currentNozzleTemp = temp.data.curr_nozzle_temp;
+      PrinterState.value.targetBedTemp = temp.data.settings.target_hotbed_temp;
+      PrinterState.value.targetNozzleTemp =
+        temp.data.settings.target_nozzle_temp;
+      PrinterState.value.fanSpeed = temp.data.settings.fan_speed_pct;
+      PrinterState.value.printSpeed = temp.data.settings.print_speed_mode;
+      PrinterState.value.zComp = temp.data.settings.z_comp;
+    }
+  });
+}
 
 const showFilesModal = ref(false);
 
@@ -108,19 +191,24 @@ onMounted(async () => {
     // Watch nozzle temp and change color from blue to green between 0 and target temp
     const fanSpeed = PrinterState.value.fanSpeed;
 
-    if (fanSpeed) {
-      // Calculate color for fan. from blue to green gradient
-      const blueValue = 255 - Math.round((fanSpeed / 100) * 255); // Decreasing blue with fan speed
-      const greenValue = Math.round((fanSpeed / 100) * 255); // Increasing green with fan speed
+    if (fanSpeed !== undefined) {
+      if (fanSpeed === 0) {
+        // Set to blue
+        tempColor.value.fan = 'rgb(0, 0, 100)';
+      } else {
+        // Calculate color for fan. from blue to green gradient
+        const blueValue = 255 - Math.round((fanSpeed / 100) * 255); // Decreasing blue with fan speed
+        const greenValue = Math.round((fanSpeed / 100) * 255); // Increasing green with fan speed
 
-      // Start from blue to green, with values adjusted dynamically
-      // tempColor.value.fan = `rgb(0, ${greenValue}, ${blueValue})`;
+        // Start from blue to green, with values adjusted dynamically
+        // tempColor.value.fan = `rgb(0, ${greenValue}, ${blueValue})`;
 
-      // Clamp values to 100 because I don't want it to be so bright
-      tempColor.value.fan = `rgb(0, ${Math.min(greenValue, 100)}, ${Math.min(
-        blueValue,
-        100
-      )})`;
+        // Clamp values to 100 because I don't want it to be so bright
+        tempColor.value.fan = `rgb(0, ${Math.min(greenValue, 100)}, ${Math.min(
+          blueValue,
+          100
+        )})`;
+      }
     }
     // Nozzle. Blue to red gradient. If target temp is 0, set to blue
     const nozzleTemp = PrinterState.value.currentNozzleTemp;
@@ -192,92 +280,24 @@ onMounted(async () => {
     if (zComp !== undefined) {
       // If zComp is negative, make it red
 
-      if (zComp === 0) {
-        // Set to blue
-        tempColor.value.zComp = 'rgb(0, 0, 100)';
-      } else {
-        const greenValue = Math.min(255, Math.round((zComp / 2) * 255));
-        const redValue = Math.min(100, Math.round((-zComp / 2) * 100));
+      try {
+        const parsedzComp = parseFloat(zComp);
+        if (parsedzComp === 0) {
+          // Set to blue
+          tempColor.value.zComp = 'rgb(0, 0, 100)';
+        } else {
+          const greenValue = Math.min(255, Math.round((parsedzComp / 2) * 255));
+          const redValue = Math.min(100, Math.round((-parsedzComp / 2) * 100));
 
-        tempColor.value.zComp = `rgb(${redValue}, ${greenValue}, 0)`;
+          tempColor.value.zComp = `rgb(${redValue}, ${greenValue}, 0)`;
+        }
+      } catch (e) {
+        console.error('Error parsing zComp:', e);
       }
     }
   });
 });
 </script>
-
-<template>
-  <div class="page p-4">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold">Kobra Unleashed</h1>
-        <p>Welcome to your dashboard. Logged in as {{ userStore.username }}</p>
-      </div>
-      <div class="flex gap-x-2">
-        <button class="btn btn-primary icon" @click="showFilesModal = true">
-          <p>New Print</p>
-          <PrintIcon class="w-8 h-8" />
-        </button>
-        <button class="btn btn-primary icon">
-          <p>Files</p>
-          <FileIcon class="w-8 h-8" />
-        </button>
-
-        <button class="btn icon btn-hover-danger" @click="userStore.logout">
-          <p>Logout</p>
-          <LogoutIcon class="w-8 h-8" />
-        </button>
-      </div>
-    </div>
-    <!-- take all width. Only 1 col -->
-    <div class="card-container">
-      <StatusCard
-        title="Nozzle"
-        :message="PrinterState.currentNozzleTemp?.toString().concat(' °C')"
-        :submessage="`Target: ${
-          PrinterState.targetNozzleTemp?.toString().concat(' °C') ?? 'N/A'
-        }`"
-        :bgcolor="tempColor?.nozzle"
-      />
-      <StatusCard
-        title="Hotbed"
-        :message="PrinterState.currentBedTemp?.toString().concat(' °C')"
-        :submessage="`Target: ${
-          PrinterState.targetBedTemp?.toString().concat(' °C') ?? 'N/A'
-        }`"
-        :bgcolor="tempColor?.bed"
-      />
-      <StatusCard
-        title="Printer Status"
-        :message="PrinterState.state"
-        :displaysubmessage="false"
-        :bgcolor="tempColor?.status"
-      />
-      <StatusCard
-        title="Speed Mode"
-        :message="
-          PrinterState.printSpeed === 1
-            ? 'Slow'
-            : PrinterState.printSpeed === 2
-            ? 'Normal'
-            : PrinterState.printSpeed === 3
-            ? 'Fast'
-            : PrinterState.printSpeed?.toString() ?? 'N/A'
-        "
-      />
-      <StatusCard
-        title="Fan Speed"
-        :message="`${PrinterState.fanSpeed?.toString().concat('%') ?? 'N/A'}`"
-        :bgcolor="tempColor?.fan"
-      />
-      <StatusCard
-        title="Z Compensation"
-        :message="PrinterState.zComp?.toString() ?? 'N/A'"
-        :bgcolor="tempColor?.zComp"
-      />
-    </div>
-  </div>
-</template>
 
 <style lang="scss" scoped>
 .card-container {

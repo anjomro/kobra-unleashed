@@ -40,4 +40,5 @@ func SetupRoutes(app *fiber.App) {
 
 	// /api/files/:pathType/:path
 	filehandler.Get("/", getFilesGET)
+	filehandler.Get("/:pathType/:filename", getFileGET)
 }

@@ -14,15 +14,36 @@ export const useUserStore = defineStore('user', () => {
   const websock = ref<IWebSocket | null>(null);
   const username = ref('N/A');
   const router = useRouter();
+  const isDev = import.meta.env.DEV;
 
   // Make onlogout callback that takes in a websocket and closes it
+
+  const createWebSocket = () => {
+    const wsURL = isDev
+      ? 'ws://localhost:3000/ws/info'
+      : 'ws://localhost/ws/info';
+    const ws = new WebSocket(wsURL);
+    registerWebSocket(ws);
+  };
 
   const registerWebSocket = (ws: WebSocket) => {
     // Ping server every 20 seconds to keep connection alive
     const pingInterval = setInterval(() => {
-      ws.send('ping');
+      if (ws.readyState === ws.OPEN) {
+        ws.send('ping');
+      } else {
+        clearInterval(pingInterval);
+      }
       console.log('Ping sent');
     }, 20000);
+
+    ws.addEventListener('close', (e) => {
+      // Reconnect if the connection is closed for unexpected reasons
+      if (e.code !== 1000) {
+        console.log('Websocket closed unexpectedly, reconnecting');
+        registerWebSocket(new WebSocket('ws://localhost:8080'));
+      }
+    });
 
     // Set the websocket and pingInterval
     websock.value = {
@@ -66,5 +87,6 @@ export const useUserStore = defineStore('user', () => {
     logout,
     registerWebSocket,
     websock,
+    createWebSocket,
   };
 });

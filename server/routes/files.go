@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/anjomro/kobra-unleashed/server/kobraprinter"
 	"github.com/gofiber/fiber/v2"
@@ -107,4 +108,58 @@ func getFilesGET(ctx *fiber.Ctx) error {
 	return ctx.Status(200).JSON(fiber.Map{
 		"message": "Files listed",
 	})
+}
+
+func getFileGET(ctx *fiber.Ctx) error {
+	// Detect if listLocal or listUdisk
+	// Get ?pathType and ?path
+	pathType := ctx.Params("pathType")
+	filename := ctx.Params("filename")
+
+	// If pathType is not listLocal or listUdisk, return 400
+	if pathType != "listLocal" && pathType != "listUdisk" {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid pathType",
+		})
+	}
+
+	// If filename is empty, return 400
+	if filename == "" {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid filename",
+		})
+	}
+
+	// Don't allow . or .. in the filename
+	// If contains . or .., return 400
+	// if strings.Contains(filename, "..") || strings.Contains(filename, ".") {
+	// 	return ctx.Status(400).JSON(fiber.Map{
+	// 		"error": "Invalid filename",
+	// 	})
+	// }
+
+	// Fix above code to allow . in filename but not in the beginning or end
+
+	if strings.HasPrefix(filename, ".") || strings.HasSuffix(filename, ".") || strings.Contains(filename, "..") || strings.Contains(filename, "/") || strings.Contains(filename, "\\") || strings.Contains(filename, "./") || strings.Contains(filename, ".\\") {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid filename",
+		})
+	}
+
+	// Only allow .gcode files
+	if !strings.HasSuffix(filename, ".gcode") {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid filename",
+		})
+	}
+
+	var path string
+	if pathType == "listLocal" {
+		path = "/mnt/UDISK/"
+	} else {
+		path = "/mnt/exUDISK/"
+	}
+
+	// Send the file
+	return ctx.SendFile(path + filename)
 }
