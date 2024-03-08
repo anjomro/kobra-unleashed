@@ -21,8 +21,88 @@ const (
 
 // map of clients uuid
 var clients = make(map[string]*socketio.Websocket)
+var stopchan chan bool = nil
+
+type usbQuery struct {
+	IsConnected bool `json:"usb_connected"`
+}
+
+// Make a function that will start watching the usb every 5 seconds
+// also make a function that will stop watching the usb
+
+func startWatchingUSB() chan bool {
+	// Create a channel for stopping the loop
+	stop := make(chan bool)
+	// Create a channel to signal the loop
+
+	// Start a go routine that watches the usb
+	go func() {
+		for {
+			select {
+			case <-stop:
+				// Received stop signal, exit the loop
+				// Put false in chan
+				stopchan = nil
+				return
+
+			default:
+				// Check USB and continue
+				if kobrautils.CheckUSB() {
+					// Send a message to the client
+					usbQ := usbQuery{
+						IsConnected: true,
+					}
+
+					resp, err := kobrautils.MakeJsonWSResp(usbQ)
+					if err != nil {
+						slog.Error(err.Error())
+						return
+					}
+
+					// Send json payload
+					for _, client := range clients {
+						client.Emit(resp, socketio.TextMessage)
+					}
+
+					// Trigger a file list update
+					err = kobraprinter.ListFiles("listUdisk", "/")
+					if err != nil {
+						slog.Error(err.Error())
+					}
+
+				} else {
+					usbQ := usbQuery{
+						IsConnected: false,
+					}
+					resp, err := kobrautils.MakeJsonWSResp(usbQ)
+					if err != nil {
+						slog.Error(err.Error())
+						return
+					}
+
+					// Send json payload
+					for _, client := range clients {
+						client.Emit(resp, socketio.TextMessage)
+					}
+
+				}
+
+				err := kobraprinter.ListFiles("listLocal", "/")
+				if err != nil {
+					slog.Error(err.Error())
+				}
+				time.Sleep(5 * time.Second)
+			}
+		}
+	}()
+
+	// Return the channel to signal stopping
+	return stop
+}
 
 func SetupWebsocket() {
+
+	// Setup a func that watches a folder for changes every 5 seconds
 
 	socketio.On(socketio.EventConnect, func(ep *socketio.EventPayload) {
 		// Add client id to clinets
@@ -52,10 +132,6 @@ func SetupWebsocket() {
 		Error string `json:"error"`
 	}
 
-	type usbQuery struct {
-		IsConnected bool `json:"usb_connected"`
-	}
-
 	socketio.On(socketio.EventMessage, func(ep *socketio.EventPayload) {
 		// If ping received, send pong
 		if string(ep.Data) == "ping" {
@@ -69,6 +145,18 @@ func SetupWebsocket() {
 		if err := json.Unmarshal(ep.Data, &msg); err != nil {
 			slog.Error(err.Error())
 			return
+		}
+
+		if msg["action"] == "watchUSB" {
+			// If chan is stopped, start it
+			if stopchan == nil {
+				stopchan = startWatchingUSB()
+			}
+		}
+
+		if msg["action"] == "stopWatchUSB" {
+			// Stop watching the usb
+			stopchan <- true
 		}
 
 		// If the message is a move command

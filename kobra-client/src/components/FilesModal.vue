@@ -35,6 +35,18 @@ const messageHandler = (event: MessageEvent) => {
 
   if (dataJson['usb_connected'] !== undefined) {
     isUSBConnected.value = dataJson['usb_connected'];
+
+    if (!isUSBConnected.value) {
+      // Delete the listUdisk list
+      const index = fileList.value.findIndex(
+        (list) => list.listType === 'listUdisk'
+      );
+
+      if (index !== -1) {
+        // Delete all records in the listUdisk list
+        fileList.value[index].records = [];
+      }
+    }
   }
 
   const mqttResponse = dataJson as MqttResponse;
@@ -84,6 +96,11 @@ const messageHandler = (event: MessageEvent) => {
 ws?.addEventListener('message', messageHandler);
 
 onBeforeUnmount(() => {
+  ws?.send(
+    JSON.stringify({
+      action: 'stopWatchUSB',
+    })
+  );
   ws?.removeEventListener('message', messageHandler);
 });
 
@@ -142,7 +159,7 @@ onMounted(async () => {
 
   ws?.send(
     JSON.stringify({
-      action: 'check-usb',
+      action: 'watchUSB',
     })
   );
 });
@@ -243,10 +260,7 @@ const downloadFile = async (file: MqttFileListRecord) => {
                   <ViewIcon class="w-6 h-6" />
                 </button>
                 <button
-                  v-if="
-                    list.listType === 'listLocal' ||
-                    (list.listType === 'listUdisk' && isUSBConnected)
-                  "
+                  v-if="isUSBConnected"
                   class="btn btn-primary"
                   @click="
                     list.listType === 'listLocal'
