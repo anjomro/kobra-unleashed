@@ -127,6 +127,35 @@ const downloadFile = async (file: MqttFileListRecord) => {
   window.URL.revokeObjectURL(url);
   a.remove();
 };
+
+const handleFileDrop = (event: DragEvent, listType: string) => {
+  if (listType === 'listUdisk' && !isUSBConnected.value) {
+    return;
+  }
+  // For all files dropped
+  if (event.dataTransfer?.files) {
+    for (const file of event.dataTransfer.files) {
+      // If not .gcode file, skip
+      if (!file.name.endsWith('.gcode')) {
+        continue;
+      }
+      // Upload files via http
+      const formData = new FormData();
+      formData.append('file', file);
+      if (listType === 'listLocal') {
+        fetch('/api/files/local', {
+          method: 'POST',
+          body: formData,
+        });
+      } else if (listType === 'listUdisk') {
+        fetch('/api/files/sdcard', {
+          method: 'POST',
+          body: formData,
+        });
+      }
+    }
+  }
+};
 </script>
 
 <template>
@@ -152,13 +181,15 @@ const downloadFile = async (file: MqttFileListRecord) => {
           <CloseIcon class="w-6 h-6" />
         </button>
       </div>
-      <p>Here are your files</p>
+      <p v-if="fileList.length === 0">Loading...</p>
       <div class="flex flex-col h-[90%] overflow-y-auto gap-y-2">
         <div
           v-for="(list, index) in fileList"
           :key="index"
           class="bg-neutral-100 dark:bg-neutral-800 p-4 rounded-lg flex flex-col space-y-2 flex-1"
           v-if="fileList"
+          @drop.prevent="handleFileDrop($event, list.listType)"
+          @dragover.prevent
         >
           <h2
             class="text-xl font-bold"
