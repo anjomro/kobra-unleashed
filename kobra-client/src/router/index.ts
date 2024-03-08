@@ -22,6 +22,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: false },
     component: () => import('@/views/NotFound.vue'),
   },
+  // Add any other routes you have here
 ];
 
 const router = createRouter({
@@ -32,17 +33,17 @@ const router = createRouter({
 // Auth guard
 router.beforeEach((to, _from, next) => {
   const userStore = useUserStore();
+
   // If not logged in and not on the login page, redirect to login
   if (!userStore.auth && to.meta.requiresAuth) {
     next('/login');
   }
   // If logged in and on the login page, redirect to dashboard
   else if (userStore.auth && to.name === 'Login') {
-    return next('/');
-  } else if (to.path === '/logout') {
-    return userStore.logout(next);
+    next('/');
+  } else {
+    next();
   }
-
-  next();
 });
+
 export default router;

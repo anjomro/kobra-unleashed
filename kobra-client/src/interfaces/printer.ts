@@ -5,6 +5,6 @@ export interface PrinterState {
   targetNozzleTemp: number | undefined;
   targetBedTemp: number | undefined;
   fanSpeed: number | undefined;
-  printSpeed: string | undefined;
-  zComp: string | undefined;
+  printSpeed: number | undefined;
+  zComp: number | undefined;
 }

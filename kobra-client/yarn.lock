@@ -154,6 +154,13 @@
   dependencies:
     "@iconify/types" "*"
 
+"@iconify-json/cbi@^1.1.7":
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/@iconify-json/cbi/-/cbi-1.1.7.tgz#a2af336da46beb7ce72bfcd43be0540a0a43e7e1"
+  integrity sha512-gPzGXZDyWSohs3Q1Br0hyYjVesb/OfBwcLLfdWJvPfNh6f4KOdmBCaBTpSU6tKYZ8MAfesfwluX3RdpHJVLnfA==
+  dependencies:
+    "@iconify/types" "*"
+
 "@iconify/types@*", "@iconify/types@^2.0.0":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@iconify/types/-/types-2.0.0.tgz#ab0e9ea681d6c8a1214f30cd741fe3a20cc57f57"

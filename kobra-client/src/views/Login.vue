@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useUserStore } from '@/stores/store';
 import { useRouter } from 'vue-router';
 import { LoginResponse } from '@/interfaces/loginResponse';
+import LoginIcon from '~icons/carbon/login';
 
 const username = ref('');
 const password = ref('');
 const loginError = ref('');
+const remember = ref(false);
 const userStore = useUserStore();
 const router = useRouter();
 
@@ -24,6 +26,7 @@ const doLogin = async () => {
     body: JSON.stringify({
       username: username.value,
       password: password.value,
+      remember: remember.value,
     }),
   });
 
@@ -37,9 +40,19 @@ const doLogin = async () => {
     userStore.$patch({ auth: true, authExpiryDate: data.expires });
     router.push({ name: 'Dashboard' });
   } else {
-    loginError.value = 'Invalid username or password';
+    if (response.status === 401) {
+      loginError.value = 'Invalid username or password';
+    } else loginError.value = response.statusText;
   }
 };
+
+onMounted(() => {
+  // Check if query parameter "logout" exists and is equal to "true"
+  const query = router.currentRoute.value.query;
+  if (query.logout === 'true') {
+    loginError.value = 'You have been logged out';
+  }
+});
 </script>
 
 <template>
@@ -51,19 +64,33 @@ const doLogin = async () => {
 
     <div>
       <form @submit.prevent="doLogin">
+        <label for="username">Username</label>
         <input
           type="text"
+          id="username"
           placeholder="Username"
           v-model="username"
           autocomplete="username"
         />
+        <label for="password">Password</label>
         <input
           type="password"
+          id="password"
           placeholder="Password"
           v-model="password"
           autocomplete="current-password"
         />
-        <button type="submit">Login</button>
+        <div class="flex items-center gap-x-1">
+          <input type="checkbox" id="remember" v-model="remember" />
+          <label for="remember">Remember me</label>
+        </div>
+        <button
+          type="submit"
+          class="flex items-center gap-x-2 btn btn-primary icon"
+        >
+          <LoginIcon class="w-6 h-6" />
+          Login
+        </button>
       </form>
       <p v-if="loginError" class="text-red-500">{{ loginError }}</p>
     </div>
@@ -81,10 +108,6 @@ form {
 
   input {
     @apply p-2 border border-gray-300 dark:bg-transparent rounded-md;
-  }
-
-  button {
-    @apply p-2 bg-blue-500 text-white rounded-md;
   }
 }
 </style>

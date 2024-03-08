@@ -4,11 +4,15 @@ const props = defineProps({
   message: String,
   submessage: String,
   displaysubmessage: { type: Boolean, default: true },
+  bgcolor: String,
 });
 </script>
 
 <template>
-  <div class="status-card">
+  <div
+    class="status-card text-white shadow-md rounded-xl p-4 dark:bg-neutral-600 bg-neutral-500"
+    :style="{ backgroundColor: props.bgcolor ?? '' }"
+  >
     <p>{{ props.title }}</p>
     <h2 class="font-bold text-2xl capitalize">
       {{ props.message ?? 'N/A' }}
@@ -19,8 +23,4 @@ const props = defineProps({
   </div>
 </template>
 
-<style lang="scss" scoped>
-.status-card {
-  @apply shadow-md rounded-lg p-4 dark:bg-neutral-600 bg-neutral-200;
-}
-</style>
+<style lang="scss" scoped></style>

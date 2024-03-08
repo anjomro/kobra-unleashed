@@ -1,20 +1,21 @@
 import { defineStore } from 'pinia';
 import { useStorage } from '@vueuse/core';
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+
+interface IWebSocket {
+  ws: WebSocket;
+  pingInterval: number | null;
+}
 
 export const useUserStore = defineStore('user', () => {
   const auth = useStorage<boolean>('auth', false);
   const authExpiryDate = useStorage<number>('authExpiryDate', 0);
+  const websock = ref<IWebSocket | null>(null);
   const username = ref('N/A');
+  const router = useRouter();
 
   // Make onlogout callback that takes in a websocket and closes it
-
-  interface IWebSocket {
-    client: WebSocket;
-    pingInterval: number;
-  }
-
-  const webSockets = ref<IWebSocket[]>([]);
 
   const registerWebSocket = (ws: WebSocket) => {
     // Ping server every 20 seconds to keep connection alive
@@ -23,18 +24,23 @@ export const useUserStore = defineStore('user', () => {
       console.log('Ping sent');
     }, 20000);
 
-    webSockets.value.push({ client: ws, pingInterval });
+    // Set the websocket and pingInterval
+    websock.value = {
+      ws,
+      pingInterval,
+    };
   };
 
-  async function logout(callback: Function) {
+  async function logout() {
     // Disconnect from ws server
 
-    if (webSockets.value.length > 0) {
-      webSockets.value.forEach((ws) => {
-        console.log('Closing websocket', ws.client.url);
-        ws.client.close();
-        clearInterval(ws.pingInterval);
-      });
+    if (websock.value) {
+      if (websock.value.pingInterval) {
+        clearInterval(websock.value.pingInterval);
+      }
+
+      websock.value.ws.close();
+      console.log('Websocket closed');
     }
 
     await fetch('/api/logout', {
@@ -49,8 +55,16 @@ export const useUserStore = defineStore('user', () => {
     document.cookie =
       'session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
-    callback({ name: 'Login' });
+    // Redirect to login
+    router.replace({ name: 'Login', query: { logout: 'true' } });
   }
 
-  return { auth, authExpiryDate, username, logout, registerWebSocket };
+  return {
+    auth,
+    authExpiryDate,
+    username,
+    logout,
+    registerWebSocket,
+    websock,
+  };
 });

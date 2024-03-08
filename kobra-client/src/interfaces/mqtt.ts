@@ -44,7 +44,7 @@ export interface MqttPrintUpdateData {
     target_hotbed_temp: number;
     fan_speed_pct: number;
     print_speed_mode: number;
-    z_comp: string;
+    z_comp: number;
   };
 }
 
