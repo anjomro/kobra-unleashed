@@ -15,13 +15,13 @@ export const useUserStore = defineStore('user', () => {
   const username = ref('N/A');
   const router = useRouter();
   const isDev = import.meta.env.DEV;
+  const wsURL = isDev
+    ? 'ws://localhost:3000/ws/info'
+    : 'ws://localhost/ws/info';
 
   // Make onlogout callback that takes in a websocket and closes it
 
   const createWebSocket = () => {
-    const wsURL = isDev
-      ? 'ws://localhost:3000/ws/info'
-      : 'ws://localhost/ws/info';
     const ws = new WebSocket(wsURL);
     registerWebSocket(ws);
   };
@@ -41,7 +41,7 @@ export const useUserStore = defineStore('user', () => {
       // Reconnect if the connection is closed for unexpected reasons
       if (e.code !== 1000) {
         console.log('Websocket closed unexpectedly, reconnecting');
-        registerWebSocket(new WebSocket('ws://localhost:8080'));
+        if (auth.value) registerWebSocket(new WebSocket(wsURL));
       }
     });
 
