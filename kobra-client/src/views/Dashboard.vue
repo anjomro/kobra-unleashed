@@ -81,7 +81,7 @@
 <script setup lang="ts">
 import { MqttResponse, PrintUpdate, Temperature } from '@/interfaces/mqtt';
 import { useUserStore } from '@/stores/store';
-import { PrinterState } from '@/interfaces/printer';
+import { ITempColor, PrinterState } from '@/interfaces/printer';
 import { onMounted, ref, watchEffect, Teleport } from 'vue';
 import StatusCard from '@/components/StatusCard.vue';
 import LogoutIcon from '~icons/carbon/logout';
@@ -101,16 +101,6 @@ const PrinterState = ref<PrinterState>({
   printSpeed: undefined,
   zComp: undefined,
 });
-
-interface ITempColor {
-  // Nozzle and bed temp
-  nozzle: string;
-  bed: string;
-  // Fan speed
-  fan: string;
-  status: string;
-  zComp: string;
-}
 
 const tempColor = ref<ITempColor>({
   nozzle: '',

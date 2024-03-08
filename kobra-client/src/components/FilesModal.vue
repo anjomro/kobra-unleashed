@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { FileList, MqttFileListRecord, MqttResponse } from '@/interfaces/mqtt';
 import { useUserStore } from '@/stores/store';
+import { IFileList } from '@/interfaces/printer';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { DateTime, DateTimeFormatOptions } from 'luxon';
+import { convertSize, convertTimestamp } from '@/utils/utils';
+import { FileList, MqttFileListRecord, MqttResponse } from '@/interfaces/mqtt';
 import FilesInspectModal from '@/components/FilesInspectModal.vue';
 import CloseIcon from '~icons/carbon/close-large';
 import DownloadButton from '~icons/carbon/download';
@@ -11,11 +12,6 @@ import PrintIcon from '~icons/mdi/printer-3d-nozzle';
 import MoveUpIcon from '~icons/system-uicons/pull-up';
 import MoveDownIcon from '~icons/system-uicons/pull-down';
 import DeleteIcon from '~icons/ic/baseline-delete';
-
-interface IFileList {
-  records: MqttFileListRecord[];
-  listType: string;
-}
 
 const showInspectModal = ref(false);
 const isUSBConnected = ref(false);
@@ -104,54 +100,9 @@ onBeforeUnmount(() => {
   ws?.removeEventListener('message', messageHandler);
 });
 
-const convertSize = (size: number) => {
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-
-  let i = 0;
-  while (size >= 1024) {
-    size /= 1024;
-    i++;
-  }
-
-  return `${size.toFixed()} ${units[i]}`;
-};
-
-const convertTimestamp = (timestamp: number) => {
-  try {
-    // Get browser locale
-    const locale = navigator.language as string;
-
-    // Convert timestamp to date object
-    const dateTime = DateTime.fromMillis(timestamp);
-
-    // Extract time using browser locale
-    const time = dateTime.toLocaleString(
-      {
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-      },
-      {
-        locale,
-      }
-    );
-
-    // Format date example: "April 1, 2022"
-    const format: DateTimeFormatOptions = {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    };
-    // Combine formatted date and time with a space
-    return `${dateTime.toLocaleString(format)} ${time}`;
-  } catch (error) {
-    // Handle errors
-    console.error('Error formatting timestamp:', error);
-    return 'Invalid timestamp';
-  }
-};
-
 const selectedFile = ref<MqttFileListRecord | null>(null);
+
+const emit = defineEmits(['close']);
 
 onMounted(async () => {
   ws?.send(
@@ -160,8 +111,6 @@ onMounted(async () => {
     })
   );
 });
-
-const emit = defineEmits(['close']);
 
 const downloadFile = async (file: MqttFileListRecord) => {
   const response = await fetch(
