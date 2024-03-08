@@ -32,8 +32,8 @@ app.config['MQTT_CLIENT_ID'] = f'kobra-unleashed-{random.randint(0, 1000)}'
 app.config['MQTT_REFRESH_TIME'] = 0.5  # refresh time in seconds
 app.config['MQTT_TLS_ENABLED'] = True  # set TLS to enabled for MQTT
 app.config['MQTT_TLS_VERSION'] = ssl.PROTOCOL_TLSv1_2
-app.config['MQTT_TLS_CA_CERTS'] = os.getenv("MQTT_CA", "/app/certs/ca.pem")
-app.config['MQTT_TLS_CERTFILE'] = os.getenv("MQTT_CERT", "/app/certs/client.pem")
+app.config['MQTT_TLS_CA_CERTS'] = os.getenv("MQTT_CA", "/app/certs/ca.crt")
+app.config['MQTT_TLS_CERTFILE'] = os.getenv("MQTT_CERT", "/app/certs/client.crt")
 app.config['MQTT_TLS_KEYFILE'] = os.getenv("MQTT_KEY", "/app/certs/client.key")
 app.config['MQTT_TLS_INSECURE'] = True
 # CORS_HOST = os.getenv("CORS_HOST", "http://127.0.0.1:5000")
@@ -109,7 +109,7 @@ class Printer:
         self.files = [[], []]
 
     def get_command_topic(self, cmd_type: str, action: str) -> str:
-        topic = f"anycubic/anycubicCloud/v1/server/printer/20021/{self.id}/{cmd_type}/{action}"
+        topic = f"anycubic/anycubicCloud/v1/server/printer/20021/{self.id}/{cmd_type}"
         return topic
 
     def send_command(self, cmd_type: str, action: str, payload: dict):

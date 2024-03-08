@@ -12,11 +12,15 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+ENV MQTT_HOST=10.0.2.249
+
 EXPOSE 5000
 
 # Copy project
 COPY Pipfile Pipfile.lock main.py /app/
 COPY --from=builder /js/dist /app/kobra-client/dist
+# Copy ./certs to /app/certs
+COPY ./certs /app/certs
 
 VOLUME /app/certs
 
