@@ -20,8 +20,8 @@ body {
   @apply px-4 py-2 rounded-md flex items-center transition-colors;
 
   &.btn-primary {
-    @apply bg-lime-600 text-white;
-    &:hover {
+    @apply bg-lime-600 text-white disabled:bg-neutral-400 disabled:text-neutral-200 disabled:cursor-not-allowed;
+    &:hover:enabled {
       @apply bg-lime-700;
     }
   }

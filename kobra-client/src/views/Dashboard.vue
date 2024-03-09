@@ -2,6 +2,11 @@
   <div class="page p-4">
     <Teleport to="body">
       <FilesModal v-if="showFilesModal" @close="showFilesModal = false" />
+      <EditParamPanel
+        v-if="showEditParamPanel"
+        @close="showEditParamPanel = false"
+        :printerState="PrinterState"
+      />
     </Teleport>
     <div
       class="flex items-center justify-between flex-col md:flex-row gap-y-2 md:gap-y-0"
@@ -29,7 +34,10 @@
       </div>
     </div>
     <!-- take all width. Only 1 col -->
-    <div class="card-container">
+    <div
+      class="card-container cursor-pointer"
+      @click="PrinterState ? (showEditParamPanel = true) : null"
+    >
       <StatusCard
         title="Nozzle"
         :message="PrinterState.currentNozzleTemp?.toString().concat(' °C')"
@@ -85,6 +93,7 @@ import { useUserStore } from '@/stores/store';
 import { ITempColor, PrinterState } from '@/interfaces/printer';
 import { onMounted, ref, watchEffect, Teleport } from 'vue';
 import StatusCard from '@/components/StatusCard.vue';
+import EditParamPanel from '@/components/EditParamPanel.vue';
 import LogoutIcon from '~icons/carbon/logout';
 import FileIcon from '~icons/carbon/volume-file-storage';
 import PrintIcon from '~icons/cbi/3dprinter-standby';
@@ -168,6 +177,7 @@ if (ws) {
 }
 
 const showFilesModal = ref(false);
+const showEditParamPanel = ref(false);
 
 // Get username
 onMounted(async () => {
