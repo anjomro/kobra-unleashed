@@ -18,11 +18,30 @@
       <div
         class="flex gap-x-2 flex-col md:flex-row gap-y-2 md:gap-y-0 w-full md:w-auto"
       >
-        <button class="btn btn-primary icon">
+        <button
+          class="btn btn-primary icon"
+          v-if="PrinterState.state === 'free'"
+        >
           <PrintIcon class="w-8 h-8" />
           <p>New Print</p>
         </button>
-        <button class="btn btn-primary icon" @click="showFilesModal = true">
+        <button
+          class="btn btn-primary icon"
+          v-if="PrinterState.state === 'printing'"
+        >
+          <PauseIcon class="w-8 h-8" />
+        </button>
+        <button
+          class="btn btn-primary icon"
+          v-if="PrinterState.state === 'printing'"
+        >
+          <StopIcon class="w-8 h-8" />
+        </button>
+        <button
+          class="btn btn-primary icon"
+          @click="showFilesModal = true"
+          v-if="PrinterState.state !== 'offline'"
+        >
           <FileIcon class="w-8 h-8" />
           <p>Files</p>
         </button>
@@ -94,10 +113,12 @@ import { ITempColor, PrinterState } from '@/interfaces/printer';
 import { onMounted, ref, watchEffect, Teleport } from 'vue';
 import StatusCard from '@/components/StatusCard.vue';
 import EditParamPanel from '@/components/EditParamPanel.vue';
+import FilesModal from '@/components/FilesModal.vue';
 import LogoutIcon from '~icons/carbon/logout';
 import FileIcon from '~icons/carbon/volume-file-storage';
 import PrintIcon from '~icons/cbi/3dprinter-standby';
-import FilesModal from '@/components/FilesModal.vue';
+import PauseIcon from '~icons/carbon/pause-filled';
+import StopIcon from '~icons/carbon/stop-filled-alt';
 
 const userStore = useUserStore();
 
@@ -131,6 +152,20 @@ if (ws) {
 
   ws.onopen = () => {
     console.log('WebSocket Client Connected');
+  };
+
+  ws.onclose = () => {
+    console.log('WebSocket Client Disconnected');
+    PrinterState.value = {
+      state: 'offline',
+      currentNozzleTemp: undefined,
+      currentBedTemp: undefined,
+      targetNozzleTemp: undefined,
+      targetBedTemp: undefined,
+      fanSpeed: undefined,
+      printSpeed: undefined,
+      zComp: undefined,
+    };
   };
 
   ws.addEventListener('message', (e) => {

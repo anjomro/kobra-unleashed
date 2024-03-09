@@ -45,11 +45,6 @@ func NewTLSConfig() *tls.Config {
 	if err != nil {
 		panic(err)
 	}
-	// Just to print out the client certificate..
-	cert.Leaf, err = x509.ParseCertificate(cert.Certificate[0])
-	if err != nil {
-		panic(err)
-	}
 	// Create tls.Config with desired tls properties
 	return &tls.Config{
 		// RootCAs = certs used to verify server cert.
@@ -72,7 +67,7 @@ func GetMQTTClient() *MQTT.Client {
 	if MQTTClient == nil {
 		opts := MQTT.NewClientOptions()
 		opts.AddBroker(utils.GetEnv("MQTT_BROKER", "ssl://localhost:8883"))
-		opts.SetClientID(utils.GetEnv("MQTT_CLIENT_ID", "go-simple"))
+		opts.SetClientID(utils.GetEnv("MQTT_CLIENT_ID", "go-kobra-unleashed"))
 		opts.SetTLSConfig(NewTLSConfig())
 		opts.SetDefaultPublishHandler(f)
 		c := MQTT.NewClient(opts)
