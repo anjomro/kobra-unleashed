@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/anjomro/kobra-unleashed/server/kobraprinter"
+	"github.com/anjomro/kobra-unleashed/server/kobrautils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -81,43 +81,31 @@ func sdcardFilesHandlerPOST(ctx *fiber.Ctx) error {
 }
 
 func getFilesGET(ctx *fiber.Ctx) error {
-	// Detect if listLocal or listUdisk
-	// Get ?pathType and ?path
-	pathType := ctx.Query("pathType")
-	path := ctx.Query("path")
+	// Return a list of files in /mnt/UDISK and /mnt/exUDISK
 
-	// If pathType is not listLocal or listUdisk, return 400
-	if pathType != "listLocal" && pathType != "listUdisk" {
-		return ctx.Status(400).JSON(fiber.Map{
-			"error": "Invalid pathType",
-		})
-	}
-
-	// If path is empty, Just set it to root /
-	if path == "" {
-		path = "/"
-	}
-
-	err := kobraprinter.ListFiles(pathType, path)
+	// Get files
+	files, err := kobrautils.ListFiles()
 	if err != nil {
+		slog.Error("ListFiles", "err", err.Error())
 		return ctx.Status(500).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Error getting local files",
 		})
 	}
 
-	return ctx.Status(200).JSON(fiber.Map{
-		"message": "Files listed",
+	// Return the files
+	return ctx.JSON(fiber.Map{
+		"files": files,
 	})
 }
 
 func getFileGET(ctx *fiber.Ctx) error {
 	// Detect if listLocal or listUdisk
 	// Get ?pathType and ?path
-	pathType := ctx.Params("pathType")
+	pathType := ctx.Params("pathtype")
 	filename := ctx.Params("filename")
 
 	// If pathType is not listLocal or listUdisk, return 400
-	if pathType != "listLocal" && pathType != "listUdisk" {
+	if pathType != "local" && pathType != "usb" {
 		return ctx.Status(400).JSON(fiber.Map{
 			"error": "Invalid pathType",
 		})
@@ -130,17 +118,7 @@ func getFileGET(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Don't allow . or .. in the filename
-	// If contains . or .., return 400
-	// if strings.Contains(filename, "..") || strings.Contains(filename, ".") {
-	// 	return ctx.Status(400).JSON(fiber.Map{
-	// 		"error": "Invalid filename",
-	// 	})
-	// }
-
-	// Fix above code to allow . in filename but not in the beginning or end
-
-	if strings.HasPrefix(filename, ".") || strings.HasSuffix(filename, ".") || strings.Contains(filename, "..") || strings.Contains(filename, "/") || strings.Contains(filename, "\\") || strings.Contains(filename, "./") || strings.Contains(filename, ".\\") {
+	if kobrautils.CheckName(filename) {
 		return ctx.Status(400).JSON(fiber.Map{
 			"error": "Invalid filename",
 		})
@@ -154,12 +132,82 @@ func getFileGET(ctx *fiber.Ctx) error {
 	}
 
 	var path string
-	if pathType == "listLocal" {
+	if pathType == "local" {
 		path = "/mnt/UDISK/"
-	} else {
+	} else if pathType == "usb" {
 		path = "/mnt/exUDISK/"
+	} else {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid pathtype",
+		})
 	}
 
 	// Send the file
 	return ctx.SendFile(path + filename)
+}
+
+func moveFileGET(ctx *fiber.Ctx) error {
+	pathType := ctx.Params("pathtype")
+	filename := ctx.Params("filename")
+	topath := ctx.Params("topath")
+
+	if pathType != "local" && pathType != "usb" {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid pathtype",
+		})
+	}
+
+	if topath != "local" && topath != "usb" {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid topath",
+		})
+	}
+
+	if filename == "" {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid filename",
+		})
+	}
+
+	if kobrautils.CheckName(filename) {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid filename",
+		})
+	}
+
+	// Url decode filename
+	filename, err := kobrautils.UrlDecode(filename)
+	if err != nil {
+		slog.Error("UrlDecode", "err", err.Error())
+		return ctx.Status(500).JSON(fiber.Map{
+			"error": "Error decoding filename",
+		})
+	}
+
+	// Move the file
+	// If topath is local, move from usb to local
+	// If topath is usb, move from local to usb
+	if topath == "local" {
+		// Move from usb to local
+		err := kobrautils.MoveFile("/mnt/exUDISK/"+filename, "/mnt/UDISK/"+filename)
+		if err != nil {
+			slog.Error("MoveFile", "err", err.Error())
+			return ctx.Status(500).JSON(fiber.Map{
+				"error": "Error moving file",
+			})
+		}
+	} else if topath == "usb" {
+		// Move from local to usb
+		err := kobrautils.MoveFile("/mnt/UDISK/"+filename, "/mnt/exUDISK/"+filename)
+		if err != nil {
+			slog.Error("MoveFile", "err", err.Error())
+			return ctx.Status(500).JSON(fiber.Map{
+				"error": "Error moving file",
+			})
+		}
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"message": "File moved",
+	})
 }

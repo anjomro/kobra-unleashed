@@ -105,3 +105,65 @@ func GetLogHandler(c *fiber.Ctx) error {
 
 	return c.Status(400).JSON(fiber.Map{"error": "Invalid logtype"})
 }
+
+func PrintHandler(c *fiber.Ctx) error {
+	// Print a file
+
+	// Check if request or fileupload
+	if c.FormValue("upload") == "false" {
+		// No upload. Just print the file
+		// Get the filename
+		filename := c.FormValue("file")
+		if filename == "" {
+			return c.Status(400).JSON(fiber.Map{"error": "No file uploaded"})
+		}
+
+		if kobrautils.CheckName(filename) {
+			return c.Status(400).JSON(fiber.Map{"error": "Invalid filename"})
+		}
+
+		shouldCopy := c.FormValue("copy") == "true"
+		if shouldCopy {
+			// Copy the file from /mnt/exUDISK to /mnt/UDISK
+			err := kobrautils.CopyFile("/mnt/exUDISK/"+filename, "/mnt/UDISK/"+filename)
+			if err != nil {
+				return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+			}
+		}
+
+		// Print the file
+		err := kobraprinter.PrintFile(filename)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		} else {
+			return c.SendStatus(200)
+		}
+	} else {
+		// File upload
+		// Get the file from the form
+		file, err := c.FormFile("file")
+		if err != nil {
+			return c.Status(400).JSON(fiber.Map{"error": "No file uploaded"})
+		}
+
+		// Save the file to /mnt/UDISK
+
+		if kobrautils.CheckName(file.Filename) {
+			return c.Status(400).JSON(fiber.Map{"error": "Invalid filename"})
+		}
+
+		filename := "/mnt/UDISK/" + file.Filename
+		err = c.SaveFile(file, filename)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "Error saving file"})
+		}
+
+		// Print the file
+		err = kobraprinter.PrintFile(file.Filename)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		} else {
+			return c.SendStatus(200)
+		}
+	}
+}

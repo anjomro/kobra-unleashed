@@ -29,6 +29,7 @@ func SetupRoutes(app *fiber.App) {
 
 	api.Get("/version", versionHandler)
 	api.Get("/user", GetUserInfo)
+	api.Post("/print", PrintHandler)
 	api.Put("/printer/settings", SetPrinterSettingsHandler)
 	api.Get("/printer/status", GetPrinterStatusHandler)
 	api.Get("/printer/log", GetLogHandler)
@@ -40,5 +41,6 @@ func SetupRoutes(app *fiber.App) {
 
 	// /api/files/:pathType/:path
 	filehandler.Get("/", getFilesGET)
-	filehandler.Get("/:pathType/:filename", getFileGET)
+	filehandler.Get("/:pathtype/:filename", getFileGET)
+	filehandler.Get("/:pathtype/:filename/:topath", moveFileGET)
 }
