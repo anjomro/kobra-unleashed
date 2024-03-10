@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -98,6 +99,28 @@ func MoveFile(src string, dst string) error {
 	return nil
 }
 
+func CopyFile(src string, dst string) error {
+	// Copy the file
+	from, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer from.Close()
+
+	to, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return err
+	}
+	defer to.Close()
+
+	_, err = io.Copy(to, from)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func DeleteFile(pathType, filename string) error {
 
 	if strings.HasPrefix(filename, ".") || strings.HasSuffix(filename, ".") || strings.Contains(filename, "..") || strings.Contains(filename, "/") || strings.Contains(filename, "\\") || strings.Contains(filename, "./") || strings.Contains(filename, ".\\") {
@@ -138,4 +161,80 @@ func MakeJsonWSResp(themap interface{}) ([]byte, error) {
 func CheckUSB() bool {
 	_, err := os.Stat("/dev/sda1")
 	return !os.IsNotExist(err)
+}
+
+func CheckName(filename string) bool {
+	if strings.HasPrefix(filename, ".") || strings.HasSuffix(filename, ".") || strings.Contains(filename, "..") || strings.Contains(filename, "/") || strings.Contains(filename, "\\") || strings.Contains(filename, "./") || strings.Contains(filename, ".\\") {
+		return true
+	}
+	return false
+}
+
+type File struct {
+	Name        string    `json:"name"`
+	Size        int64     `json:"size"`
+	Modified_at time.Time `json:"modified_at"`
+	Path        string    `json:"path"`
+}
+
+func ListFiles() ([]File, error) {
+	// List all the files in the given path
+
+	var fileList []File
+
+	// Only list .gcode files
+	localFiles, err := os.ReadDir("/mnt/UDISK")
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if /mnt/exUDISK exists
+	if _, err := os.Stat("/mnt/exUDISK"); err == nil {
+		usbFiles, err := os.ReadDir("/mnt/exUDISK")
+		if err != nil {
+			return nil, err
+		}
+
+		for _, f := range usbFiles {
+			if strings.HasSuffix(f.Name(), ".gcode") {
+				// Get file info using stat
+				fileinfo, err := f.Info()
+				if err != nil {
+					return nil, err
+				}
+
+				fileList = append(fileList, File{
+					Name:        f.Name(),
+					Size:        fileinfo.Size(),
+					Modified_at: fileinfo.ModTime(),
+					Path:        "usb",
+				})
+			}
+		}
+	}
+
+	for _, f := range localFiles {
+		if strings.HasSuffix(f.Name(), ".gcode") {
+			// Get file info using stat
+			fileinfo, err := f.Info()
+			if err != nil {
+				return nil, err
+			}
+
+			fileList = append(fileList, File{
+				Name:        f.Name(),
+				Size:        fileinfo.Size(),
+				Modified_at: fileinfo.ModTime(),
+				Path:        "local",
+			})
+		}
+	}
+
+	return fileList, nil
+}
+
+// Remove %20 from the url etc
+func UrlDecode(s string) (string, error) {
+	// Query escape the string
+	return url.QueryUnescape(s)
 }

@@ -1,95 +1,27 @@
 <script setup lang="ts">
 import { useUserStore } from '@/stores/store';
-import { IFileList } from '@/interfaces/printer';
-import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { convertSize, convertTimestamp } from '@/utils/utils';
-import { FileList, MqttFileListRecord, MqttResponse } from '@/interfaces/mqtt';
+import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref } from 'vue';
 import FilesInspectModal from '@/components/FilesInspectModal.vue';
 import CloseIcon from '~icons/carbon/close-large';
-import DownloadButton from '~icons/carbon/download';
-import ViewIcon from '~icons/carbon/view';
-import PrintIcon from '~icons/mdi/printer-3d-nozzle';
-import MoveUpIcon from '~icons/system-uicons/pull-up';
-import MoveDownIcon from '~icons/system-uicons/pull-down';
-import DeleteIcon from '~icons/ic/baseline-delete';
+import ModeUpIcon from '~icons/system-uicons/pull-up';
+import ModeDownIcon from '~icons/system-uicons/pull-down';
+
+import { usePrintStore } from '@/stores/printer';
+import { IFile } from '@/interfaces/printer';
+import { convertSize, convertTimestamp } from '@/utils/utils';
+import PrintIcon from '~icons/cbi/3dprinter-standby';
+import DownloadIcon from '~icons/ph/download-fill';
 
 const showInspectModal = ref(false);
-const isUSBConnected = ref(false);
-
-const fileList = ref<IFileList[]>([]);
 
 const ws = useUserStore().websock?.ws;
+const printStore = usePrintStore();
+const fileList = computed(() => printStore.files);
+const isUsbConnected = computed(() => printStore.isUsbConnected);
 
-const messageHandler = (event: MessageEvent) => {
-  if (event.data === 'pong') return;
-
-  const data = JSON.parse(event.data);
-  const message = atob(data.message);
-
-  // Parse json
-  const dataJson = JSON.parse(message);
-
-  if (dataJson['usb_connected'] !== undefined) {
-    isUSBConnected.value = dataJson['usb_connected'];
-
-    if (!isUSBConnected.value) {
-      // Delete the listUdisk list
-      const index = fileList.value.findIndex(
-        (list) => list.listType === 'listUdisk'
-      );
-
-      if (index !== -1) {
-        // Delete all records in the listUdisk list
-        fileList.value[index].records = [];
-      }
-    }
-  }
-
-  const mqttResponse = dataJson as MqttResponse;
-
-  if (
-    (mqttResponse.type === 'file' && mqttResponse.action === 'listLocal') ||
-    mqttResponse.action === 'listUdisk'
-  ) {
-    const fileMqttResponse: FileList = mqttResponse;
-
-    fileMqttResponse.data.records.forEach((record) => {
-      record.file_location = fileMqttResponse.action;
-    });
-
-    if (fileList.value.length > 2) {
-      fileList.value = [];
-    }
-
-    // If listType already exists, remove it and push the new one
-    // Replace the old list with the new one
-    const index = fileList.value.findIndex(
-      (list) => list.listType === fileMqttResponse.action
-    );
-
-    if (index !== -1) {
-      fileList.value.splice(index, 1);
-    }
-
-    fileList.value?.push({
-      listType: fileMqttResponse.action,
-      records: fileMqttResponse.data.records,
-    });
-
-    // Sort listtype Make sure listLocal is first
-    fileList.value.sort((a, b) => {
-      if (a.listType === 'listLocal') {
-        return -1;
-      }
-      if (b.listType === 'listLocal') {
-        return 1;
-      }
-      return 0;
-    });
-  }
-};
-
-ws?.addEventListener('message', messageHandler);
+onBeforeMount(() => {
+  printStore.getFiles();
+});
 
 onBeforeUnmount(() => {
   ws?.send(
@@ -97,12 +29,11 @@ onBeforeUnmount(() => {
       action: 'stopWatchUSB',
     })
   );
-  ws?.removeEventListener('message', messageHandler);
 });
 
-const selectedFile = ref<MqttFileListRecord | null>(null);
+const selectedFile = ref<IFile | null>(null);
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'print']);
 
 onMounted(async () => {
   ws?.send(
@@ -111,51 +42,6 @@ onMounted(async () => {
     })
   );
 });
-
-const downloadFile = async (file: MqttFileListRecord) => {
-  const response = await fetch(
-    `/api/files/${file.file_location}/${file.filename}`
-  );
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.style.display = 'none';
-  a.href = url;
-  a.download = file.filename;
-  document.body.appendChild(a);
-  a.click();
-  window.URL.revokeObjectURL(url);
-  a.remove();
-};
-
-const handleFileDrop = (event: DragEvent, listType: string) => {
-  if (listType === 'listUdisk' && !isUSBConnected.value) {
-    return;
-  }
-  // For all files dropped
-  if (event.dataTransfer?.files) {
-    for (const file of event.dataTransfer.files) {
-      // If not .gcode file, skip
-      if (!file.name.endsWith('.gcode')) {
-        continue;
-      }
-      // Upload files via http
-      const formData = new FormData();
-      formData.append('file', file);
-      if (listType === 'listLocal') {
-        fetch('/api/files/local', {
-          method: 'POST',
-          body: formData,
-        });
-      } else if (listType === 'listUdisk') {
-        fetch('/api/files/sdcard', {
-          method: 'POST',
-          body: formData,
-        });
-      }
-    }
-  }
-};
 </script>
 
 <template>
@@ -175,117 +61,113 @@ const handleFileDrop = (event: DragEvent, listType: string) => {
     <div
       class="w-full h-full md:w-[75%] md:rounded-lg md:h-[90%] bg-neutral-200 dark:bg-neutral-700 p-4 flex flex-col gap-y-2 absolute overflow-hidden"
     >
-      <div class="flex justify-between">
-        <h1 class="text-3xl font-bold">Files</h1>
-        <button class="btn btn-primary btn-hover-danger" @click="emit('close')">
+      <div class="titlebar">
+        <h1 class="text-3xl font-bold title">Files</h1>
+        <button
+          class="btn btn-primary btn-hover-danger close place-self-end"
+          @click="emit('close')"
+        >
           <CloseIcon class="w-6 h-6" />
         </button>
       </div>
-      <p v-if="fileList.length === 0">Loading...</p>
-      <div class="flex flex-col h-[90%] overflow-y-auto gap-y-2">
+      <div
+        v-if="!fileList?.files.length"
+        class="flex items-center justify-center w-full h-full"
+      >
+        <div class="spinner"></div>
+        <p class="text-lg font-bold ml-2">Loading...</p>
+      </div>
+      <div v-else class="flex flex-col gap-y-2 w-full h-full overflow-y-auto">
         <div
-          v-for="(list, index) in fileList"
-          :key="index"
-          class="bg-neutral-100 dark:bg-neutral-800 p-4 rounded-lg flex flex-col space-y-2 flex-1"
-          v-if="fileList"
-          @drop.prevent="handleFileDrop($event, list.listType)"
-          @dragover.prevent
+          class="flex flex-col bg-neutral-200 dark:bg-neutral-800 p-2 rounded-lg"
         >
-          <h2
-            class="text-xl font-bold"
-            v-if="list.listType === 'listUdisk' && isUSBConnected === false"
+          <h2 class="text-lg font-bold p-2">Local</h2>
+          <ul
+            class="flex flex-col gap-y-2 bg-neutral-100 dark:bg-neutral-700 p-2 rounded-lg"
           >
-            No USB connected
-          </h2>
-          <h2
-            class="text-xl font-bold"
-            v-else-if="list.listType === 'listLocal'"
-          >
-            Local
-          </h2>
-          <h2
-            class="text-xl font-bold"
-            v-else-if="list.listType === 'listUdisk'"
-          >
-            USB
-          </h2>
-
-          <ul class="flex flex-col space-y-2">
             <li
-              v-for="record in list.records.filter(
-                (record) => !record.is_dir && record.size > 0
-              )"
-              :key="record.filename"
-              class="p-2 bg-neutral-200 dark:bg-neutral-700 rounded-lg flex flex-col md:flex-row justify-between items-center gap-y-2"
+              v-for="file in fileList?.files.filter((f) => f.path === 'local')"
             >
-              <div>
-                <p class="font-semibold">{{ record.filename }}</p>
-                <p>Size: {{ convertSize(record.size) }}</p>
-                <p>{{ convertTimestamp(record.timestamp) }}</p>
-              </div>
-              <div class="flex gap-x-1">
-                <button class="btn btn-primary">
-                  <PrintIcon class="w-6 h-6" />
-                </button>
-                <button
-                  class="btn btn-primary"
-                  @click="
-                    selectedFile = record;
-                    showInspectModal = true;
-                  "
-                >
-                  <ViewIcon class="w-6 h-6" />
-                </button>
-                <button
-                  v-if="isUSBConnected"
-                  class="btn btn-primary"
-                  @click="
-                    list.listType === 'listLocal'
-                      ? ws?.send(
-                          JSON.stringify({
-                            action: 'moveToUdisk',
-                            filename: record.filename,
-                          })
-                        )
-                      : ws?.send(
-                          JSON.stringify({
-                            action: 'moveToLocal',
-                            filename: record.filename,
-                          })
-                        )
-                  "
-                >
-                  <MoveDownIcon
-                    class="w-6 h-6"
-                    v-if="list.listType === 'listLocal'"
-                  />
-                  <MoveUpIcon class="w-6 h-6" v-else />
-                </button>
-                <button class="btn btn-primary">
-                  <DownloadButton
-                    class="w-6 h-6"
-                    @click="downloadFile(record)"
-                  />
-                </button>
-                <button
-                  class="btn btn-hover-danger"
-                  @click="
-                    ws?.send(
-                      JSON.stringify({
-                        action: 'deleteFile',
-                        filename: record.filename,
-                        filelocation: list.listType,
-                      })
-                    )
-                  "
-                >
-                  <DeleteIcon class="w-6 h-6" />
-                </button>
+              <h2 class="text-lg font-bold">{{ file.name }}</h2>
+              <p class="text-sm">{{ convertSize(file.size) }}</p>
+
+              <div class="flex justify-between items-center">
+                <p class="text-sm">{{ convertTimestamp(file.modified_at) }}</p>
+                <div class="flex gap-x-2">
+                  <button class="btn btn-primary">
+                    <PrintIcon class="w-6 h-6" />
+                  </button>
+                  <button
+                    class="btn btn-primary"
+                    :disabled="!isUsbConnected"
+                    @click="printStore.moveFileDown(file)"
+                  >
+                    <ModeDownIcon class="w-6 h-6" />
+                  </button>
+                  <button
+                    class="btn btn-primary"
+                    @click="printStore.downloadFile(file)"
+                  >
+                    <DownloadIcon class="w-6 h-6" />
+                  </button>
+                </div>
               </div>
             </li>
-            <p v-if="list.records.length === 0 && isUSBConnected">
-              No files found
-            </p>
+            <li
+              v-if="!fileList.files.filter((f) => f.path === 'local').length"
+              class="flex items-center justify-center w-full h-full"
+            >
+              <p class="text-lg font-bold">No files found</p>
+            </li>
+          </ul>
+        </div>
+        <div
+          class="flex flex-col bg-neutral-200 dark:bg-neutral-800 p-2 rounded-lg"
+        >
+          <h2 class="text-lg font-bold p-2">USB</h2>
+          <ul
+            class="flex flex-col gap-y-2 bg-neutral-100 dark:bg-neutral-700 p-2 rounded-lg"
+          >
+            <li v-for="file in fileList?.files.filter((f) => f.path === 'usb')">
+              <h2 class="text-lg font-bold">{{ file.name }}</h2>
+              <p class="text-sm">{{ convertSize(file.size) }}</p>
+
+              <div class="flex justify-between items-center">
+                <p class="text-sm">{{ convertTimestamp(file.modified_at) }}</p>
+                <div class="flex gap-x-2">
+                  <button class="btn btn-primary">
+                    <PrintIcon class="w-6 h-6" />
+                  </button>
+                  <button
+                    class="btn btn-primary"
+                    @click="printStore.moveFileUp(file)"
+                  >
+                    <ModeUpIcon class="w-6 h-6" />
+                  </button>
+                  <button
+                    class="btn btn-primary"
+                    @click="printStore.downloadFile(file)"
+                  >
+                    <DownloadIcon class="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+            </li>
+            <li
+              v-if="
+                !fileList.files.filter((f) => f.path === 'usb').length &&
+                isUsbConnected
+              "
+              class="flex items-center justify-center w-full h-full"
+            >
+              <p class="text-lg font-bold">No files found</p>
+            </li>
+            <li
+              class="flex items-center justify-center w-full h-full"
+              v-else-if="!isUsbConnected"
+            >
+              <p class="text-lg font-bold">No USB connected</p>
+            </li>
           </ul>
         </div>
       </div>
@@ -293,4 +175,17 @@ const handleFileDrop = (event: DragEvent, listType: string) => {
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.titlebar {
+  @apply grid place-items-center;
+  grid-template-areas: '. title close';
+  grid-template-columns: 1fr 2fr 1fr;
+  .title {
+    grid-area: title;
+  }
+
+  .close {
+    grid-area: close;
+  }
+}
+</style>

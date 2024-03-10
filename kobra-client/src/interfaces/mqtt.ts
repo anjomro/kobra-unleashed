@@ -30,19 +30,6 @@ interface MqttPrintUpdateData {
   };
 }
 
-export interface MqttFileListRecord {
-  is_dir: boolean;
-  filename: string;
-  timestamp: number;
-  size: number;
-  file_location: string;
-}
-
-interface MqttFileListData {
-  list_mode: number;
-  records: MqttFileListRecord[];
-}
-
 // Temperature interface that extends the MqttResponse interface
 export interface Temperature extends MqttResponse {
   data: MqttTempatureData;
@@ -50,8 +37,4 @@ export interface Temperature extends MqttResponse {
 
 export interface PrintUpdate extends MqttResponse {
   data: MqttPrintUpdateData;
-}
-
-export interface FileList extends MqttResponse {
-  data: MqttFileListData;
 }

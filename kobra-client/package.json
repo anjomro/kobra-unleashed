@@ -24,6 +24,7 @@
     "@iconify-json/icon-park-solid": "^1.1.14",
     "@iconify-json/lets-icons": "^1.1.2",
     "@iconify-json/mdi": "^1.1.64",
+    "@iconify-json/ph": "^1.1.11",
     "@iconify-json/system-uicons": "^1.1.12",
     "@types/luxon": "^3.4.2",
     "@types/node": "^20.11.24",

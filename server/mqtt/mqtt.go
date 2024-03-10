@@ -151,32 +151,35 @@ func SendCommand(payload *structs.MqttPayload, action string) error {
 // Subscribe to anything
 func SubscribeToPrinter() {
 	// Subscribe to the printer messages
-
 	client := *GetMQTTClient()
 	topic, err := getPublicTopic()
 	if err != nil {
 		slog.Error("Error getting public topic", "err", err)
+		return
 	}
 
-	topic = topic + "/#"
+	topic = topic + "/#" // Subscribe to all subtopics under the public topic
 
 	token := client.Subscribe(topic, 0, func(client MQTT.Client, msg MQTT.Message) {
-		// Push the message to the channel
-		// globalMqttChannel <- msg.Payload()
-		// Convert payload  to byte
-
-		payload := map[string]interface{}{"message": msg.Payload()}
-		payloadBytes, err := json.Marshal(payload)
+		// Unmarshal the message once
+		var mqttResponse structs.MqttResponse
+		err := json.Unmarshal(msg.Payload(), &mqttResponse)
 		if err != nil {
-			// handle error
+			slog.Error("Error unmarshalling message", "err", err)
 			return
 		}
 
-		socketio.Broadcast(payloadBytes, socketio.TextMessage)
+		message, err := kobrautils.MakeJsonWSResp(mqttResponse)
+		if err != nil {
+			slog.Error("Error making json ws resp", "err", err)
+			return
+		}
+
+		// Emit the message to the socket
+		socketio.Broadcast(message, socketio.TextMessage)
 	})
 
 	token.Wait()
 
 	slog.Info("MQTT", "Subscribed to topic", topic)
-
 }

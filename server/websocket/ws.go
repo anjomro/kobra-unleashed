@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"strings"
 	"time"
 
-	"github.com/anjomro/kobra-unleashed/server/kobraprinter"
 	"github.com/anjomro/kobra-unleashed/server/kobrautils"
 	"github.com/anjomro/kobra-unleashed/server/mqtt"
 	"github.com/gofiber/contrib/socketio"
@@ -64,12 +62,6 @@ func startWatchingUSB() chan bool {
 						client.Emit(resp, socketio.TextMessage)
 					}
 
-					// Trigger a file list update
-					err = kobraprinter.ListFiles("listUdisk", "/")
-					if err != nil {
-						slog.Error(err.Error())
-					}
-
 				} else {
 					usbQ := usbQuery{
 						IsConnected: false,
@@ -85,11 +77,6 @@ func startWatchingUSB() chan bool {
 						client.Emit(resp, socketio.TextMessage)
 					}
 
-				}
-
-				err := kobraprinter.ListFiles("listLocal", "/")
-				if err != nil {
-					slog.Error(err.Error())
 				}
 				time.Sleep(5 * time.Second)
 			}
@@ -157,93 +144,6 @@ func SetupWebsocket() {
 		if msg["action"] == "stopWatchUSB" {
 			// Stop watching the usb
 			stopchan <- true
-		}
-
-		// If the message is a move command
-		if msg["action"] == "moveToUdisk" {
-			filename := msg["filename"].(string)
-
-			// Move file from /mnt/UDISK to /mnt/exUDISK
-			if err := kobrautils.MoveFile("/mnt/UDISK/"+filename, "/mnt/exUDISK/"+filename); err != nil {
-				slog.Error(err.Error())
-				return
-			}
-
-			// Trigger a file list update
-			err := kobraprinter.ListFiles("listUdisk", "/")
-			if err != nil {
-				slog.Error(err.Error())
-			}
-
-			err = kobraprinter.ListFiles("listLocal", "/")
-			if err != nil {
-				slog.Error(err.Error())
-			}
-		}
-
-		if msg["action"] == "moveToLocal" {
-			filename := msg["filename"].(string)
-
-			if strings.HasPrefix(filename, ".") || strings.HasSuffix(filename, ".") || strings.Contains(filename, "..") || strings.Contains(filename, "/") || strings.Contains(filename, "\\") || strings.Contains(filename, "./") || strings.Contains(filename, ".\\") {
-				slog.Error("Invalid filename")
-				// Create json payload
-				payload := jsonError{
-					Error: "Invalid filename",
-				}
-				jsonBytes, err := json.Marshal(payload)
-				if err != nil {
-					slog.Error(err.Error())
-					return
-				}
-				// Send json payload
-				ep.Kws.Emit(jsonBytes, socketio.TextMessage)
-				return
-			}
-
-			// Move file from /mnt/exUDISK to /mnt/UDISK
-			if err := kobrautils.MoveFile("/mnt/exUDISK/"+filename, "/mnt/UDISK/"+filename); err != nil {
-				slog.Error(err.Error())
-				return
-			}
-
-			// Trigger a file list update
-			err := kobraprinter.ListFiles("listUdisk", "/")
-			if err != nil {
-				slog.Error(err.Error())
-			}
-
-			err = kobraprinter.ListFiles("listLocal", "/")
-			if err != nil {
-				slog.Error(err.Error())
-			}
-		}
-
-		if msg["action"] == "deleteFile" {
-			filename := msg["filename"].(string)
-			filelocation := msg["filelocation"].(string)
-
-			if filelocation == "listLocal" {
-				if err := kobrautils.DeleteFile("local", filename); err != nil {
-					slog.Error(err.Error())
-					return
-				}
-			} else if filelocation == "listUdisk" {
-				if err := kobrautils.DeleteFile("udisk", filename); err != nil {
-					slog.Error(err.Error())
-					return
-				}
-			}
-
-			// Trigger a file list update
-			err := kobraprinter.ListFiles("listUdisk", "/")
-			if err != nil {
-				slog.Error(err.Error())
-			}
-
-			err = kobraprinter.ListFiles("listLocal", "/")
-			if err != nil {
-				slog.Error(err.Error())
-			}
 		}
 
 		if msg["action"] == "check-usb" {
