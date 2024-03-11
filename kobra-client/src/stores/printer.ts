@@ -6,6 +6,7 @@ import {
   IPrinterFiles,
   PrinterState,
 } from '@/interfaces/printer';
+import * as GCodePreview from 'gcode-preview';
 
 export const usePrintStore = defineStore('printer', () => {
   const printJob = ref<IPrintJob>({});
