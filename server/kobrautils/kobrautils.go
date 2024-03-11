@@ -196,12 +196,12 @@ func ListFiles() ([]File, error) {
 		}
 
 		for _, f := range usbFiles {
-			if strings.HasSuffix(f.Name(), ".gcode") {
+			fileinfo, err := f.Info()
+			if err != nil {
+				return nil, err
+			}
+			if strings.HasSuffix(f.Name(), ".gcode") && fileinfo.Size() > 0 {
 				// Get file info using stat
-				fileinfo, err := f.Info()
-				if err != nil {
-					return nil, err
-				}
 
 				fileList = append(fileList, File{
 					Name:        f.Name(),
@@ -214,12 +214,12 @@ func ListFiles() ([]File, error) {
 	}
 
 	for _, f := range localFiles {
-		if strings.HasSuffix(f.Name(), ".gcode") {
+		fileinfo, err := f.Info()
+		if err != nil {
+			return nil, err
+		}
+		if strings.HasSuffix(f.Name(), ".gcode") && fileinfo.Size() > 0 {
 			// Get file info using stat
-			fileinfo, err := f.Info()
-			if err != nil {
-				return nil, err
-			}
 
 			fileList = append(fileList, File{
 				Name:        f.Name(),

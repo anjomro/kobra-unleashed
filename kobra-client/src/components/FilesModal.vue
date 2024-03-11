@@ -20,6 +20,41 @@ const ws = useUserStore().websock?.ws;
 const printStore = usePrintStore();
 const fileList = computed(() => printStore.files);
 const isUsbConnected = computed(() => printStore.isUsbConnected);
+const selectedFile = ref<IFile | null>(null);
+const emit = defineEmits(['close', 'print']);
+
+const handleDragOver = (e: DragEvent) => {
+  e.preventDefault();
+  //only allow gcode files
+  if (e.dataTransfer?.items[0].type === 'text/x-gcode') {
+    e.dataTransfer.dropEffect = 'copy';
+  } else {
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = 'none';
+    }
+  }
+};
+
+const handleDrop = async (e: DragEvent, path: string) => {
+  e.preventDefault();
+  const file = e.dataTransfer?.files[0];
+  if (file) {
+    // only allow gcode files
+    if (file.type === 'text/x-gcode') {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch(`/api/files/${path}`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (response.ok) {
+        printStore.getFiles();
+      } else {
+        console.error('Failed to upload file');
+      }
+    }
+  }
+};
 
 onBeforeMount(() => {
   printStore.getFiles();
@@ -32,10 +67,6 @@ onBeforeUnmount(() => {
     })
   );
 });
-
-const selectedFile = ref<IFile | null>(null);
-
-const emit = defineEmits(['close', 'print']);
 
 onMounted(async () => {
   ws?.send(
@@ -81,7 +112,9 @@ onMounted(async () => {
       </div>
       <div v-else class="flex flex-col gap-y-2 w-full h-full overflow-y-auto">
         <div
-          class="flex flex-col bg-neutral-200 dark:bg-neutral-800 p-2 rounded-lg"
+          class="flex flex-col bg-neutral-200 dark:bg-neutral-800 p-2 rounded-lg gap-y-2"
+          @dragover.prevent="handleDragOver"
+          @drop.prevent="handleDrop($event, 'local')"
         >
           <h2 class="text-lg font-bold p-2">Local</h2>
 
@@ -131,7 +164,9 @@ onMounted(async () => {
           </li>
         </div>
         <div
-          class="flex flex-col bg-neutral-200 dark:bg-neutral-800 p-2 rounded-lg"
+          class="flex flex-col bg-neutral-200 dark:bg-neutral-800 p-2 rounded-lg gap-y-2"
+          @dragover.prevent="handleDragOver"
+          @drop.prevent="handleDrop($event, 'sdcard')"
         >
           <h2 class="text-lg font-bold p-2">USB</h2>
 
