@@ -38,10 +38,10 @@
           <FileIcon class="w-8 h-8" />
           <p>Files</p>
         </button>
-        <button class="btn btn-primary icon">
+        <RouterLink class="btn btn-primary icon" to="/settings">
           <SettingsIcon class="w-8 h-8" />
           <p>Settings</p>
-        </button>
+        </RouterLink>
 
         <button class="btn icon btn-hover-danger" @click="userStore.logout">
           <LogoutIcon class="w-8 h-8" />

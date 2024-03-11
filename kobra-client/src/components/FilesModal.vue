@@ -12,6 +12,7 @@ import { convertSize, convertTimestamp } from '@/utils/utils';
 import PrintIcon from '~icons/cbi/3dprinter-standby';
 import DownloadIcon from '~icons/ph/download-fill';
 import ViewIcon from '~icons/ph/eye-fill';
+import ImagePreview from './ImagePreview.vue';
 
 const showInspectModal = ref(false);
 
@@ -83,111 +84,108 @@ onMounted(async () => {
           class="flex flex-col bg-neutral-200 dark:bg-neutral-800 p-2 rounded-lg"
         >
           <h2 class="text-lg font-bold p-2">Local</h2>
-          <ul
-            class="flex flex-col gap-y-2 bg-neutral-100 dark:bg-neutral-700 p-2 rounded-lg"
-          >
-            <li
-              v-for="file in fileList?.files.filter((f) => f.path === 'local')"
-            >
-              <h2 class="text-lg font-bold">{{ file.name }}</h2>
-              <p class="text-sm">{{ convertSize(file.size) }}</p>
 
-              <div class="flex justify-between items-center">
-                <p class="text-sm">{{ convertTimestamp(file.modified_at) }}</p>
-                <div class="flex gap-x-2">
-                  <button class="btn btn-primary">
-                    <PrintIcon class="w-6 h-6" />
-                  </button>
-                  <button
-                    class="btn btn-primary"
-                    @click="
-                      showInspectModal = true;
-                      selectedFile = file;
-                    "
-                  >
-                    <ViewIcon class="w-6 h-6" />
-                  </button>
-                  <button
-                    class="btn btn-primary"
-                    :disabled="!isUsbConnected"
-                    @click="printStore.moveFileDown(file)"
-                  >
-                    <ModeDownIcon class="w-6 h-6" />
-                  </button>
-                  <button
-                    class="btn btn-primary"
-                    @click="printStore.downloadFile(file)"
-                  >
-                    <DownloadIcon class="w-6 h-6" />
-                  </button>
-                </div>
+          <li
+            v-for="file in fileList?.files.filter((f) => f.path === 'local')"
+            class="files-container"
+          >
+            <ImagePreview :file="file" />
+            <h2 class="text-lg font-bold">{{ file.name }}</h2>
+            <p class="text-sm">{{ convertSize(file.size) }}</p>
+            <p class="text-sm">{{ convertTimestamp(file.modified_at) }}</p>
+            <div class="files-container">
+              <div class="flex gap-x-2">
+                <button class="btn btn-primary">
+                  <PrintIcon class="w-6 h-6" />
+                </button>
+                <button
+                  class="btn btn-primary"
+                  @click="
+                    showInspectModal = true;
+                    selectedFile = file;
+                  "
+                >
+                  <ViewIcon class="w-6 h-6" />
+                </button>
+                <button
+                  class="btn btn-primary"
+                  :disabled="!isUsbConnected"
+                  @click="printStore.moveFileDown(file)"
+                >
+                  <ModeDownIcon class="w-6 h-6" />
+                </button>
+                <button
+                  class="btn btn-primary"
+                  @click="printStore.downloadFile(file)"
+                >
+                  <DownloadIcon class="w-6 h-6" />
+                </button>
               </div>
-            </li>
-            <li
-              v-if="!fileList.files.filter((f) => f.path === 'local').length"
-              class="flex items-center justify-center w-full h-full"
-            >
-              <p class="text-lg font-bold">No files found</p>
-            </li>
-          </ul>
+            </div>
+          </li>
+          <li
+            v-if="!fileList.files.filter((f) => f.path === 'local').length"
+            class="flex items-center justify-center w-full h-full"
+          >
+            <p class="text-lg font-bold">No files found</p>
+          </li>
         </div>
         <div
           class="flex flex-col bg-neutral-200 dark:bg-neutral-800 p-2 rounded-lg"
         >
           <h2 class="text-lg font-bold p-2">USB</h2>
-          <ul
-            class="flex flex-col gap-y-2 bg-neutral-100 dark:bg-neutral-700 p-2 rounded-lg"
-          >
-            <li v-for="file in fileList?.files.filter((f) => f.path === 'usb')">
-              <h2 class="text-lg font-bold">{{ file.name }}</h2>
-              <p class="text-sm">{{ convertSize(file.size) }}</p>
 
-              <div class="flex justify-between items-center">
-                <p class="text-sm">{{ convertTimestamp(file.modified_at) }}</p>
-                <div class="flex gap-x-2">
-                  <button class="btn btn-primary">
-                    <PrintIcon class="w-6 h-6" />
-                  </button>
-                  <button
-                    class="btn btn-primary"
-                    @click="
-                      showInspectModal = true;
-                      selectedFile = file;
-                    "
-                  >
-                    <ViewIcon class="w-6 h-6" />
-                  </button>
-                  <button
-                    class="btn btn-primary"
-                    @click="printStore.moveFileUp(file)"
-                  >
-                    <ModeUpIcon class="w-6 h-6" />
-                  </button>
-                  <button
-                    class="btn btn-primary"
-                    @click="printStore.downloadFile(file)"
-                  >
-                    <DownloadIcon class="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-            </li>
-            <li
-              v-if="
-                !fileList.files.filter((f) => f.path === 'usb').length &&
-                isUsbConnected
-              "
-              class="flex items-center justify-center w-full h-full"
-            >
-              <p class="text-lg font-bold">No files found</p>
-            </li>
-            <li
-              class="flex items-center justify-center w-full h-full"
-              v-else-if="!isUsbConnected"
-            >
-              <p class="text-lg font-bold">No USB connected</p>
-            </li>
-          </ul>
+          <li
+            v-for="file in fileList?.files.filter((f) => f.path === 'usb')"
+            class="files-container"
+          >
+            <ImagePreview :file="file" />
+            <h2 class="text-lg font-bold">{{ file.name }}</h2>
+            <p class="text-sm">{{ convertSize(file.size) }}</p>
+            <p class="text-sm">{{ convertTimestamp(file.modified_at) }}</p>
+
+            <div class="flex gap-x-2">
+              <button class="btn btn-primary">
+                <PrintIcon class="w-6 h-6" />
+              </button>
+              <button
+                class="btn btn-primary"
+                @click="
+                  showInspectModal = true;
+                  selectedFile = file;
+                "
+              >
+                <ViewIcon class="w-6 h-6" />
+              </button>
+              <button
+                class="btn btn-primary"
+                @click="printStore.moveFileUp(file)"
+              >
+                <ModeUpIcon class="w-6 h-6" />
+              </button>
+              <button
+                class="btn btn-primary"
+                @click="printStore.downloadFile(file)"
+              >
+                <DownloadIcon class="w-6 h-6" />
+              </button>
+            </div>
+          </li>
+          <li
+            v-if="
+              !fileList.files.filter((f) => f.path === 'usb').length &&
+              isUsbConnected
+            "
+            class="flex items-center justify-center w-full h-full"
+          >
+            <p class="text-lg font-bold">No files found</p>
+          </li>
+          <li
+            class="flex items-center justify-center w-full h-full"
+            v-else-if="!isUsbConnected"
+          >
+            <p class="text-lg font-bold">No USB connected</p>
+          </li>
         </div>
       </div>
     </div>
@@ -206,5 +204,9 @@ onMounted(async () => {
   .close {
     grid-area: close;
   }
+}
+
+.files-container {
+  @apply flex flex-col md:flex-row items-center justify-between gap-y-2 md:gap-x-2 bg-neutral-100 dark:bg-neutral-700 p-2 rounded-lg;
 }
 </style>

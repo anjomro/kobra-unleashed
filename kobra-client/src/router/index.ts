@@ -11,6 +11,12 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/Dashboard.vue'),
   },
   {
+    path: '/settings',
+    name: 'Settings',
+    meta: { requiresAuth: true },
+    component: () => import('@/views/Settings.vue'),
+  },
+  {
     path: '/login',
     name: 'Login',
     meta: { requiresAuth: false },
