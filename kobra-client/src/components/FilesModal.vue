@@ -11,6 +11,7 @@ import { IFile } from '@/interfaces/printer';
 import { convertSize, convertTimestamp } from '@/utils/utils';
 import PrintIcon from '~icons/cbi/3dprinter-standby';
 import DownloadIcon from '~icons/ph/download-fill';
+import ViewIcon from '~icons/ph/eye-fill';
 
 const showInspectModal = ref(false);
 
@@ -99,6 +100,15 @@ onMounted(async () => {
                   </button>
                   <button
                     class="btn btn-primary"
+                    @click="
+                      showInspectModal = true;
+                      selectedFile = file;
+                    "
+                  >
+                    <ViewIcon class="w-6 h-6" />
+                  </button>
+                  <button
+                    class="btn btn-primary"
                     :disabled="!isUsbConnected"
                     @click="printStore.moveFileDown(file)"
                   >
@@ -137,6 +147,15 @@ onMounted(async () => {
                 <div class="flex gap-x-2">
                   <button class="btn btn-primary">
                     <PrintIcon class="w-6 h-6" />
+                  </button>
+                  <button
+                    class="btn btn-primary"
+                    @click="
+                      showInspectModal = true;
+                      selectedFile = file;
+                    "
+                  >
+                    <ViewIcon class="w-6 h-6" />
                   </button>
                   <button
                     class="btn btn-primary"

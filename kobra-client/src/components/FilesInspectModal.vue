@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { MqttFileListRecord } from '@/interfaces/mqtt';
 import { onMounted, ref, toRefs } from 'vue';
 import CloseIcon from '~icons/icon-park-solid/back';
 import { EditorView, basicSetup } from 'codemirror';
+import { IFile } from '@/interfaces/printer';
 
 const prop = defineProps({
   file: {
-    type: Object as () => MqttFileListRecord,
+    type: Object as () => IFile,
     required: true,
   },
 });
@@ -18,7 +18,7 @@ const data = ref('');
 
 onMounted(async () => {
   const response = await fetch(
-    `/api/files/${props.file.value.file_location}/${props.file.value.filename}`
+    `/api/files/${props.file.value.path}/${props.file.value.name}`
   );
   data.value = await response.text();
 
@@ -47,7 +47,7 @@ onMounted(async () => {
     >
       <div class="flex items-center justify-between">
         <div class="flex">
-          <h1 class="text-lg font-semibold">{{ props.file.value.filename }}</h1>
+          <h1 class="text-lg font-semibold">{{ props.file.value.name }}</h1>
         </div>
         <button
           class="btn btn-primary btn-hover-danger self-end"
