@@ -11,6 +11,7 @@
   "dependencies": {
     "@vueuse/core": "^10.9.0",
     "codemirror": "^6.0.1",
+    "gcode-preview": "^2.13.0",
     "luxon": "^3.4.4",
     "pinia": "^2.1.7",
     "vue": "^3.4.19",
