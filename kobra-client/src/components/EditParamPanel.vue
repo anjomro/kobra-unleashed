@@ -58,7 +58,7 @@ const saveNewParams = async (newState: PrinterState) => {
 
 const buttonDisable = ref(false);
 const currentPrintSpeed = computed(() => {
-  switch (currentPrinterState?.printSpeed) {
+  switch (currentPrinterState.printSpeed) {
     case 1:
       return 'Slow';
     case 2:
@@ -104,7 +104,7 @@ watchEffect(() => {
             <div class="flex flex-col gap-y-2">
               <label for="targetNozzleTemp"
                 >Target Nozzle Temp ({{
-                  currentPrinterState?.targetNozzleTemp
+                  currentPrinterState.targetNozzleTemp
                 }})</label
               >
               <input
@@ -118,7 +118,7 @@ watchEffect(() => {
             <div class="flex flex-col gap-y-2">
               <label for="targetBedTemp"
                 >Target Bed Temp ({{
-                  currentPrinterState?.targetBedTemp
+                  currentPrinterState.targetBedTemp
                 }})</label
               >
               <input
@@ -131,7 +131,7 @@ watchEffect(() => {
             </div>
             <div class="flex flex-col gap-y-2">
               <label for="fanSpeed"
-                >Fan Speed ({{ currentPrinterState?.fanSpeed }}%)</label
+                >Fan Speed ({{ currentPrinterState.fanSpeed }}%)</label
               >
               <input
                 v-model="newPrinterState.fanSpeed"
@@ -160,7 +160,7 @@ watchEffect(() => {
             </div>
             <div class="flex flex-col gap-y-2">
               <label for="zComp"
-                >Z Compensation ({{ currentPrinterState?.zComp }})</label
+                >Z Compensation ({{ currentPrinterState.zComp }})</label
               >
               <input
                 v-model="newPrinterState.zComp"
