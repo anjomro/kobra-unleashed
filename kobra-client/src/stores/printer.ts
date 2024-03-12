@@ -20,8 +20,20 @@ export const usePrintStore = defineStore('printer', {
     },
   },
   actions: {
-    printFile(file: IFile | undefined) {
-      console.log('Printing file', file);
+    async printFile(file: IFile) {
+      const formData = new FormData();
+      formData.append('upload', 'false');
+      formData.append('file', file.name);
+      formData.append('copy', file.path === 'usb' ? 'true' : 'false');
+
+      const response = await fetch('/api/print', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        console.error('Error printing file');
+      }
     },
 
     async moveFileUp(file: IFile) {
