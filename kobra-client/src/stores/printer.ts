@@ -40,7 +40,7 @@ export const usePrintStore = defineStore('printer', () => {
     // Find file in list and move it to usb by changing the path
 
     // Move file to usb
-    const response = await fetch(`/api/files/${file?.path}/${file?.name}/usb`, {
+    const response = await fetch(`/api/files/${file.path}/${file.name}/usb`, {
       // Get
       method: 'GET',
     });
@@ -53,7 +53,7 @@ export const usePrintStore = defineStore('printer', () => {
   };
 
   const deleteFile = async (file: IFile) => {
-    const response = await fetch(`/api/files/${file?.path}/${file?.name}`, {
+    const response = await fetch(`/api/files/${file.path}/${file.name}`, {
       method: 'DELETE',
     });
 
@@ -65,12 +65,12 @@ export const usePrintStore = defineStore('printer', () => {
     getFiles();
   };
 
-  const downloadFile = (file: IFile | undefined) => {
+  const downloadFile = (file: IFile) => {
     // Send filename to printer
     // Download file
     const link = document.createElement('a');
     link.style.display = 'none';
-    link.href = `/api/files/${file?.path}/${file?.name}`;
+    link.href = `/api/files/${file.path}/${file.name}`;
     link.download = file?.name || '';
     document.body.appendChild(link);
     link.click();
