@@ -4,7 +4,7 @@ import { storeToRefs } from 'pinia';
 
 const printStore = usePrintStore();
 
-const { printJob } = storeToRefs(printStore);
+const { printJob, printStatus } = storeToRefs(printStore);
 
 const cancelPrintJob = async () => {
   if (!printJob.value) {
@@ -31,6 +31,12 @@ const cancelPrintJob = async () => {
       <div class="flex justify-between items-center">
         <h3 class="text-lg font-bold">Current Print Job</h3>
         <button @click="cancelPrintJob" class="btn btn-danger">Cancel</button>
+        <button v-if="printStatus.state === 'printing'" class="btn btn-primary">
+          Pause
+        </button>
+        <button v-if="printStatus.state === 'paused'" class="btn btn-primary">
+          Resume
+        </button>
       </div>
       <div class="flex flex-col gap-y-2">
         <div class="flex justify-between items-center">

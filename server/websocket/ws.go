@@ -119,6 +119,7 @@ func SetupWebsocket() {
 		if string(ep.Data) == "ping" {
 			ep.Kws.Emit([]byte("pong"), socketio.TextMessage)
 			ep.Kws.Conn.SetReadDeadline(time.Now().Add(pongWait))
+			return
 		}
 
 		// Try to json decode the message
