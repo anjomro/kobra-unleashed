@@ -18,7 +18,6 @@ export const useUserStore = defineStore('user', {
       authExpiryDate: useStorage<number>('authExpiryDate', 0),
       websock: ref<IWebSocket | null>(null),
       username: ref('N/A'),
-      router: useRouter(),
       wsURL: isDev ? 'ws://localhost:3000/ws/info' : 'ws://localhost/ws/info',
     };
   },
@@ -75,9 +74,10 @@ export const useUserStore = defineStore('user', {
       // Delete cookies
       document.cookie =
         'session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      const router = useRouter();
 
       // Redirect to login
-      this.router.replace({ name: 'Login', query: { logout: 'true' } });
+      router.replace({ name: 'Login', query: { logout: 'true' } });
     },
   },
 });
