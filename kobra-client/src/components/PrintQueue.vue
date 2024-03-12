@@ -54,21 +54,23 @@ const resumePrintJob = async () => {
     <div class="flex flex-col gap-y-2">
       <div class="flex justify-between items-center">
         <h3 class="text-lg font-bold">Current Print Job</h3>
-        <button @click="cancelPrintJob" class="btn btn-danger">Cancel</button>
-        <button
-          v-if="printStatus.state === 'printing'"
-          class="btn btn-primary"
-          @click="pausePrintJob"
-        >
-          Pause
-        </button>
-        <button
-          v-if="printStatus.state === 'paused'"
-          class="btn btn-primary"
-          @click="resumePrintJob"
-        >
-          Resume
-        </button>
+        <div class="flex gap-x-2">
+          <button
+            v-if="printStatus.state === 'printing'"
+            class="btn btn-primary"
+            @click="pausePrintJob"
+          >
+            Pause
+          </button>
+          <button
+            v-if="printStatus.state === 'paused'"
+            class="btn btn-primary"
+            @click="resumePrintJob"
+          >
+            Resume
+          </button>
+          <button @click="cancelPrintJob" class="btn btn-danger">Cancel</button>
+        </div>
       </div>
       <div class="flex flex-col gap-y-2">
         <div class="flex justify-between items-center">
@@ -76,16 +78,15 @@ const resumePrintJob = async () => {
           <p>{{ printJob.filename }}</p>
         </div>
         <div class="flex justify-between items-center">
-          <p class="text-lg font-bold">Progress</p>
-          <p>{{ printJob.progress }}%</p>
-        </div>
-        <div class="flex justify-between items-center">
-          <p class="text-lg font-bold">Time Remaining</p>
-          <p>{{ printJob.remain_time }}</p>
-        </div>
-        <div class="flex justify-between items-center">
-          <p class="text-lg font-bold">Time Elapsed</p>
-          <p>{{ printJob.progress }}</p>
+          <!-- div that moves with progrss -->
+          <div class="bg-neutral-200 dark:bg-neutral-500 rounded-lg w-full">
+            <div
+              class="w-full bg-purple-500 rounded-lg flex justify-center items-center text-white font-bold"
+              :style="{ width: printJob.progress + '%' }"
+            >
+              {{ printJob.progress }}%
+            </div>
+          </div>
         </div>
       </div>
     </div>
