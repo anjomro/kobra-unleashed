@@ -21,13 +21,10 @@ export const usePrintStore = defineStore('printer', () => {
     // Find file in list and move it to local by changing the path
 
     // Move file to local
-    const response = await fetch(
-      `/api/files/${file?.path}/${file?.name}/local`,
-      {
-        // Get
-        method: 'GET',
-      }
-    );
+    const response = await fetch(`/api/files/${file.path}/${file.name}/local`, {
+      // Get
+      method: 'GET',
+    });
 
     if (!response.ok) {
       console.error('Error moving file to local');
@@ -71,7 +68,7 @@ export const usePrintStore = defineStore('printer', () => {
     const link = document.createElement('a');
     link.style.display = 'none';
     link.href = `/api/files/${file.path}/${file.name}`;
-    link.download = file?.name || '';
+    link.download = file.name;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
