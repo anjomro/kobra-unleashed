@@ -95,10 +95,8 @@ func getFilesGET(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Return the files
-	return ctx.JSON(fiber.Map{
-		"files": files,
-	})
+	// Return the files as json [{}]
+	return ctx.Status(200).JSON(files)
 
 }
 

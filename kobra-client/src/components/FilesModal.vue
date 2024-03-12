@@ -105,7 +105,7 @@ onMounted(async () => {
         </button>
       </div>
       <div
-        v-if="!fileList?.files.length"
+        v-if="!fileList.length"
         class="flex items-center justify-center w-full h-full"
       >
         <div class="spinner"></div>
@@ -120,7 +120,7 @@ onMounted(async () => {
           <h2 class="text-lg font-bold p-2">Local</h2>
 
           <li
-            v-for="file in fileList?.files.filter((f) => f.path === 'local')"
+            v-for="file in fileList.filter((f) => f.path === 'local')"
             class="files-container"
           >
             <ImagePreview :file="file" />
@@ -164,7 +164,7 @@ onMounted(async () => {
             </div>
           </li>
           <li
-            v-if="!fileList.files.filter((f) => f.path === 'local').length"
+            v-if="!fileList.filter((f) => f.path === 'local').length"
             class="flex items-center justify-center w-full h-full"
           >
             <p class="text-lg font-bold">No files found</p>
@@ -178,7 +178,7 @@ onMounted(async () => {
           <h2 class="text-lg font-bold p-2">USB</h2>
 
           <li
-            v-for="file in fileList?.files.filter((f) => f.path === 'usb')"
+            v-for="file in fileList.filter((f) => f.path === 'usb')"
             class="files-container"
           >
             <ImagePreview :file="file" />
@@ -221,8 +221,7 @@ onMounted(async () => {
           </li>
           <li
             v-if="
-              !fileList.files.filter((f) => f.path === 'usb').length &&
-              isUsbConnected
+              !fileList.filter((f) => f.path === 'usb').length && isUsbConnected
             "
             class="flex items-center justify-center w-full h-full"
           >

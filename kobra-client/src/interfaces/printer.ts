@@ -36,7 +36,3 @@ export interface IFile {
   modified_at: string;
   path: string;
 }
-
-export interface IPrinterFiles {
-  files: IFile[];
-}

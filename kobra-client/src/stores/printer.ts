@@ -1,16 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import {
-  IFile,
-  IPrintJob,
-  IPrinterFiles,
-  PrinterState,
-} from '@/interfaces/printer';
+import { IFile, IPrintJob, PrinterState } from '@/interfaces/printer';
 
 export const usePrintStore = defineStore('printer', () => {
   const printJob = ref<IPrintJob>({});
   const printStatus = ref<PrinterState | null>(null);
-  const files = ref<IPrinterFiles | null>(null);
+  const files = ref<IFile[]>([]);
   const isUsbConnected = ref<boolean>(false);
 
   const printFile = (file: IFile | undefined) => {
@@ -76,7 +71,7 @@ export const usePrintStore = defineStore('printer', () => {
 
   const getFiles = async () => {
     const response = await fetch('/api/files');
-    const data: IPrinterFiles = await response.json();
+    const data: IFile[] = await response.json();
 
     files.value = data;
   };
