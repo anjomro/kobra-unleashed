@@ -20,9 +20,6 @@ const calculateColor = (progress: number) => {
 const { printJob, printStatus } = storeToRefs(printStore);
 
 const cancelPrintJob = async () => {
-  if (!printJob.value) {
-    return;
-  }
   const response = await fetch(`/api/print/${printJob.value.taskid}/cancel`, {
     method: 'POST',
   });
@@ -32,9 +29,6 @@ const cancelPrintJob = async () => {
 };
 
 const pausePrintJob = async () => {
-  if (!printJob.value) {
-    return;
-  }
   const response = await fetch(`/api/print/${printJob.value.taskid}/pause`, {
     method: 'POST',
   });
@@ -44,9 +38,6 @@ const pausePrintJob = async () => {
 };
 
 const resumePrintJob = async () => {
-  if (!printJob.value) {
-    return;
-  }
   const response = await fetch(`/api/print/${printJob.value.taskid}/resume`, {
     method: 'POST',
   });
@@ -67,25 +58,20 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
 });
 
+const gcodeFile = ref<string>('');
+
 onMounted(async () => {
+  window.addEventListener('resize', handleResize);
+
   watchEffect(async () => {
     // return if no print job progress or curr_layer return
 
-    if (printJob.value?.filename) {
+    if (printJob.value?.filename && !gcodeFile.value.length) {
       const response = await fetch(
         `/api/files/local/${printJob.value.filename}`
       );
       if (response.ok) {
-        const gcode = await response.text();
-        window.addEventListener('resize', handleResize);
-
-        if (
-          printJob.value.progress === undefined ||
-          printJob.value.curr_layer === undefined
-        ) {
-          return;
-        }
-
+        gcodeFile.value = await response.text();
         preview = init({
           canvas: gcodePreview.value,
           initialCameraPosition: [200, 200, 200],
@@ -99,22 +85,34 @@ onMounted(async () => {
             j: 400,
           },
         });
-
-        preview.processGCode(gcode);
-        preview.render();
-
-        preview.endLayer = printJob.value.curr_layer;
-        preview.extrusionColor = calculateColor(printJob.value.progress);
-        preview.buildVolume = {
-          x: 410,
-          y: 400,
-          z: 400,
-          r: 400,
-          i: 400,
-          j: 400,
-        };
+        preview.processGCode(gcodeFile.value);
       }
     }
+  });
+
+  watchEffect(() => {
+    if (
+      printJob.value.progress === undefined ||
+      printJob.value.curr_layer === undefined ||
+      !preview
+    ) {
+      return;
+    }
+
+    console.log('rendering preview');
+
+    preview.endLayer = printJob.value.curr_layer;
+    preview.extrusionColor = calculateColor(printJob.value.progress);
+    preview.buildVolume = {
+      x: 410,
+      y: 400,
+      z: 400,
+      r: 400,
+      i: 400,
+      j: 400,
+    };
+
+    preview.render();
   });
 });
 </script>
