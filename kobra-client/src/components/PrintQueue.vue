@@ -73,7 +73,9 @@ const resumePrintJob = async () => {
         </div>
       </div>
       <div class="flex flex-col gap-y-2">
-        <div class="flex justify-between items-center">
+        <div
+          class="flex flex-col md:items-center md:flex-row gap-y-2 md:gap-x-2"
+        >
           <p class="text-lg font-bold">File Name</p>
           <p>{{ printJob.filename }}</p>
         </div>
@@ -81,7 +83,7 @@ const resumePrintJob = async () => {
           <!-- div that moves with progrss -->
           <div class="bg-neutral-200 dark:bg-neutral-500 rounded-lg w-full">
             <div
-              class="w-full bg-purple-500 rounded-lg flex justify-center items-center text-white font-bold"
+              class="w-full bg-purple-500 rounded-lg flex justify-center items-center text-white font-semibold p-2"
               :style="{ width: printJob.progress + '%' }"
             >
               {{ printJob.progress }}%
