@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePrintStore } from '@/stores/printer';
 import { storeToRefs } from 'pinia';
-import * as GCodePreview from 'gcode-preview';
+import { init } from 'gcode-preview';
 import { onMounted, ref, watchEffect } from 'vue';
 
 const printStore = usePrintStore();
@@ -54,13 +54,18 @@ onMounted(() => {
         `/api/files/local/${printJob.value.filename}`
       );
       if (response.ok) {
-        const preview = GCodePreview.init({
-          canvas: gcodePreview.value,
-        });
         const gcode = await response.text();
+
+        const preview = init({
+          canvas: gcodePreview.value,
+          extrusionColor: '#00ff00',
+        });
+
         preview.processGCode(gcode);
 
-        preview.render();
+        preview.resize();
+
+        console.log('ok');
 
         displayCanvas.value = true;
       }
@@ -119,7 +124,7 @@ onMounted(() => {
         <canvas
           v-show="displayCanvas"
           ref="gcodePreview"
-          class="w-full rounded-lg h-64"
+          class="w-full h-[20rem] rounded-lg"
         ></canvas>
       </div>
     </div>
@@ -134,3 +139,4 @@ onMounted(() => {
 </template>
 
 <style scoped></style>
+async
