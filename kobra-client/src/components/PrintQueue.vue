@@ -1,8 +1,13 @@
 <script setup lang="ts">
 import { usePrintStore } from '@/stores/printer';
 import { storeToRefs } from 'pinia';
+import * as GCodePreview from 'gcode-preview';
+import { onMounted, ref, watchEffect } from 'vue';
 
 const printStore = usePrintStore();
+
+const gcodePreview = ref<HTMLCanvasElement | undefined>(undefined);
+const displayCanvas = ref(false);
 
 const { printJob, printStatus } = storeToRefs(printStore);
 
@@ -41,6 +46,27 @@ const resumePrintJob = async () => {
     console.error('Error resuming print job');
   }
 };
+
+onMounted(() => {
+  watchEffect(async () => {
+    if (printJob.value?.filename) {
+      const response = await fetch(
+        `/api/files/local/${printJob.value.filename}`
+      );
+      if (response.ok) {
+        const preview = GCodePreview.init({
+          canvas: gcodePreview.value,
+        });
+        const gcode = await response.text();
+        preview.processGCode(gcode);
+
+        preview.render();
+
+        displayCanvas.value = true;
+      }
+    }
+  });
+});
 </script>
 
 <template>
@@ -90,6 +116,11 @@ const resumePrintJob = async () => {
             </div>
           </div>
         </div>
+        <canvas
+          v-show="displayCanvas"
+          ref="gcodePreview"
+          class="w-full rounded-lg h-64"
+        ></canvas>
       </div>
     </div>
   </div>
