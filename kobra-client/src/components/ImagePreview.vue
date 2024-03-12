@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { IFile } from '@/interfaces/printer';
-import { PropType, onBeforeMount, ref } from 'vue';
+import { PropType, onMounted, ref } from 'vue';
 
 const image = ref<string>('');
 
@@ -20,7 +20,7 @@ const props = defineProps({
   },
 });
 
-onBeforeMount(async () => {
+onMounted(async () => {
   const file = props.file;
   const response = await fetch(`/api/files/${file.path}/${file.name}`);
   const data = await response.text();
