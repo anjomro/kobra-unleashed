@@ -19,7 +19,7 @@ const showInspectModal = ref(false);
 
 const userStore = useUserStore();
 const printStore = usePrintStore();
-const fileList = computed(() => printStore.files);
+const fileList = computed(() => printStore.getFileList);
 const ws = computed(() => userStore.websock);
 const isUsbConnected = computed(() => printStore.isUsbConnected);
 const selectedFile = ref<IFile | null>(null);
@@ -122,6 +122,7 @@ onMounted(async () => {
 
           <li
             v-for="localfile in fileList.filter((f) => f.path === 'local')"
+            :key="localfile.name"
             class="files-container"
           >
             <ImagePreview :file="localfile" />
@@ -180,6 +181,7 @@ onMounted(async () => {
 
           <li
             v-for="usbfile in fileList.filter((f) => f.path === 'usb')"
+            :key="usbfile.name"
             class="files-container"
           >
             <ImagePreview :file="usbfile" />

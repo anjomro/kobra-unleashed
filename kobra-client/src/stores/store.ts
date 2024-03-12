@@ -12,15 +12,13 @@ const isDev = import.meta.env.DEV;
 
 export const useUserStore = defineStore('user', {
   // arrow function recommended for full type inference
-  state: () => {
-    return {
-      auth: useStorage<boolean>('auth', false),
-      authExpiryDate: useStorage<number>('authExpiryDate', 0),
-      websock: ref<IWebSocket | null>(null),
-      username: ref('N/A'),
-      wsURL: isDev ? 'ws://localhost:3000/ws/info' : 'ws://localhost/ws/info',
-    };
-  },
+  state: () => ({
+    auth: useStorage<boolean>('auth', false),
+    authExpiryDate: useStorage<number>('authExpiryDate', 0),
+    websock: ref<IWebSocket | null>(null),
+    username: ref('N/A'),
+    wsURL: isDev ? 'ws://localhost:3000/ws/info' : 'ws://localhost/ws/info',
+  }),
   actions: {
     createWebSocket() {
       const ws = new WebSocket(this.wsURL);
