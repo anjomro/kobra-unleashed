@@ -182,7 +182,9 @@ if (ws) {
       mqttResponse.action === 'workReport'
     ) {
       // PrinterState.value.state = mqttResponse.state;
-      printStore.$patch({ printStatus: { state: mqttResponse.state } });
+      printStore.$patch((state) => {
+        state.printStatus.state = mqttResponse.state;
+      });
     }
 
     if (
@@ -216,6 +218,14 @@ if (ws) {
         printStore.$patch((state) => {
           state.printStatus.state = printUpdate.state;
           state.printJob = {};
+        });
+      } else if (mqttResponse.action === 'pause') {
+        printStore.$patch((state) => {
+          state.printStatus.state = printUpdate.state;
+        });
+      } else if (mqttResponse.action === 'resume') {
+        printStore.$patch((state) => {
+          state.printStatus.state = printUpdate.state;
         });
       }
     }
@@ -339,6 +349,18 @@ onMounted(async () => {
           tempColor.value.status = 'rgb(100, 0, 100)';
           break;
         case 'stopping':
+          // Orange
+          tempColor.value.status = 'rgb(100, 50, 0)';
+          break;
+        case 'pausing':
+          // Orange
+          tempColor.value.status = 'rgb(100, 50, 0)';
+          break;
+        case 'resuming':
+          // Orange
+          tempColor.value.status = 'rgb(100, 50, 0)';
+          break;
+        case 'paused':
           // Orange
           tempColor.value.status = 'rgb(100, 50, 0)';
           break;
