@@ -17,7 +17,7 @@ export const usePrintStore = defineStore('printer', () => {
     console.log('Printing file', file);
   };
 
-  const moveFileUp = async (file: IFile | undefined) => {
+  const moveFileUp = async (file: IFile) => {
     // Find file in list and move it to local by changing the path
 
     // Move file to local
@@ -36,7 +36,7 @@ export const usePrintStore = defineStore('printer', () => {
     getFiles();
   };
 
-  const moveFileDown = async (file: IFile | undefined) => {
+  const moveFileDown = async (file: IFile) => {
     // Find file in list and move it to usb by changing the path
 
     // Move file to usb
@@ -52,14 +52,12 @@ export const usePrintStore = defineStore('printer', () => {
     getFiles();
   };
 
-  const deleteFile = async (file: IFile | undefined) => {
+  const deleteFile = async (file: IFile) => {
     const response = await fetch(`/api/files/${file?.path}/${file?.name}`, {
       method: 'DELETE',
     });
 
-    if (response.ok) {
-      console.log('File deleted');
-    } else {
+    if (!response.ok) {
       console.error('Error deleting file');
     }
 

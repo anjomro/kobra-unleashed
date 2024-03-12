@@ -30,23 +30,6 @@ export interface IPrintJob {
   curr_layer?: number;
 }
 
-// {
-// 	"files": [
-// 		{
-// 			"name": "Calibration Cube-C0.2-19m-2024-3-10.gcode",
-// 			"size": 389980,
-// 			"modified_at": "2024-03-11T03:43:53.47356424+08:00",
-// 			"path": "local"
-// 		},
-// 		{
-// 			"name": "Rounded-Mini-Scraper-v01-C0.2-9m-2024-3-10.gcode",
-// 			"size": 899394,
-// 			"modified_at": "2024-03-11T03:34:40+08:00",
-// 			"path": "usb"
-// 		}
-// 	]
-// }
-
 export interface IFile {
   name: string;
   size: number;
