@@ -1,7 +1,7 @@
 <template>
   <img
     v-if="image"
-    :src="image ?? ''"
+    :src="image"
     alt="Image preview"
     class="w-[100%] h-[100%] md:h-14 md:w-14 object-cover"
   />
@@ -11,7 +11,7 @@
 import { IFile } from '@/interfaces/printer';
 import { PropType, onBeforeMount, ref } from 'vue';
 
-const image = ref<string | null>(null);
+const image = ref<string>('');
 
 const props = defineProps({
   file: {
@@ -20,9 +20,8 @@ const props = defineProps({
   },
 });
 
-const file = props.file;
-
 onBeforeMount(async () => {
+  const file = props.file;
   const response = await fetch(`/api/files/${file.path}/${file.name}`);
   const data = await response.text();
 
