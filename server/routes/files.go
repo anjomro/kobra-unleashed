@@ -152,6 +152,13 @@ func getFileGET(ctx *fiber.Ctx) error {
 		})
 	}
 
+	// Check if the file exists
+	if _, err := os.Stat(path + filename); os.IsNotExist(err) {
+		return ctx.Status(404).JSON(fiber.Map{
+			"error": "File not found",
+		})
+	}
+
 	// Make a buffer of 1kb
 	buff := make([]byte, 1024)
 

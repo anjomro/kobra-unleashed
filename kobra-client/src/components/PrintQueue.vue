@@ -1,13 +1,22 @@
 <script setup lang="ts">
 import { usePrintStore } from '@/stores/printer';
 import { storeToRefs } from 'pinia';
-import { init } from 'gcode-preview';
-import { onMounted, ref, watchEffect } from 'vue';
+import { WebGLPreview, init } from 'gcode-preview';
+
+import { onBeforeUnmount, onMounted, ref, watchEffect } from 'vue';
 
 const printStore = usePrintStore();
 
 const gcodePreview = ref<HTMLCanvasElement | undefined>(undefined);
 const displayCanvas = ref(false);
+
+// Make a function that calculates a color based on the progress red to green
+const calculateColor = (progress: number) => {
+  const r =
+    progress < 50 ? 255 : Math.floor(255 - ((progress * 2 - 100) * 255) / 100);
+  const g = progress > 50 ? 255 : Math.floor((progress * 2 * 255) / 100);
+  return `rgb(${r}, ${g}, 0)`;
+};
 
 const { printJob, printStatus } = storeToRefs(printStore);
 
@@ -47,23 +56,57 @@ const resumePrintJob = async () => {
   }
 };
 
+let preview: WebGLPreview | undefined = undefined;
+
+const handleResize = () => {
+  if (preview) {
+    preview.resize();
+  }
+};
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
+});
+
 onMounted(() => {
   watchEffect(async () => {
+    // return if no print job progress or curr_layer return
+
     if (printJob.value?.filename) {
+      window.addEventListener('resize', handleResize);
       const response = await fetch(
         `/api/files/local/${printJob.value.filename}`
       );
       if (response.ok) {
         const gcode = await response.text();
 
-        const preview = init({
+        if (
+          printJob.value.progress === undefined ||
+          printJob.value.curr_layer === undefined
+        ) {
+          return;
+        }
+
+        preview = init({
           canvas: gcodePreview.value,
-          extrusionColor: '#00ff00',
+          extrusionColor: calculateColor(printJob.value.progress),
+          initialCameraPosition: [200, 200, 200],
+          renderTubes: true,
+          buildVolume: {
+            x: 410,
+            y: 400,
+            z: 400,
+            r: 400,
+            i: 400,
+            j: 400,
+          },
         });
+
+        preview.endLayer = printJob.value.curr_layer;
 
         preview.processGCode(gcode);
 
-        preview.resize();
+        preview.render();
 
         console.log('ok');
 
