@@ -130,7 +130,7 @@ func DeleteFile(pathType, filename string) error {
 	// Delete the file
 	if pathType == "local" {
 		return os.Remove("/mnt/UDISK/" + filename)
-	} else if pathType == "udisk" {
+	} else if pathType == "usb" {
 		return os.Remove("/mnt/exUDISK/" + filename)
 	} else {
 		return fmt.Errorf("invalid pathType")

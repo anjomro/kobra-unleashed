@@ -53,8 +53,19 @@ export const usePrintStore = defineStore('printer', () => {
     getFiles();
   };
 
-  const deleteFile = (file: IFile | undefined) => {
-    // Send filename to printer
+  const deleteFile = async (file: IFile | undefined) => {
+    const response = await fetch(`/api/files/${file?.path}/${file?.name}`, {
+      method: 'DELETE',
+    });
+
+    if (response.ok) {
+      console.log('File deleted');
+    } else {
+      console.error('Error deleting file');
+    }
+
+    // Delete it from the list
+    getFiles();
   };
 
   const downloadFile = (file: IFile | undefined) => {

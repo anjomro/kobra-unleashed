@@ -5,6 +5,7 @@ import FilesInspectModal from '@/components/FilesInspectModal.vue';
 import CloseIcon from '~icons/carbon/close-large';
 import ModeUpIcon from '~icons/system-uicons/pull-up';
 import ModeDownIcon from '~icons/system-uicons/pull-down';
+import DeleteIcon from '~icons/ph/trash-fill';
 
 import { usePrintStore } from '@/stores/printer';
 import { IFile } from '@/interfaces/printer';
@@ -153,6 +154,12 @@ onMounted(async () => {
                 >
                   <DownloadIcon class="w-6 h-6" />
                 </button>
+                <button
+                  class="btn btn-hover-danger"
+                  @click="printStore.deleteFile(file)"
+                >
+                  <DeleteIcon class="w-6 h-6" />
+                </button>
               </div>
             </div>
           </li>
@@ -203,6 +210,12 @@ onMounted(async () => {
                 @click="printStore.downloadFile(file)"
               >
                 <DownloadIcon class="w-6 h-6" />
+              </button>
+              <button
+                class="btn btn-hover-danger"
+                @click="printStore.deleteFile(file)"
+              >
+                <DeleteIcon class="w-6 h-6" />
               </button>
             </div>
           </li>

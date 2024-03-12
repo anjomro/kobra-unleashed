@@ -41,6 +41,6 @@ func SetupRoutes(app *fiber.App) {
 
 	// /api/files/:pathType/:path
 	filehandler.Get("/", getFilesGET)
-	filehandler.Get("/:pathtype/:filename", getFileGET)
+	filehandler.Get("/:pathtype/:filename", getFileGET).Delete("/:pathtype/:filename", deleteFileDELETE)
 	filehandler.Get("/:pathtype/:filename/:topath", moveFileGET)
 }

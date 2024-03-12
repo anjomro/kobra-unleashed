@@ -245,3 +245,49 @@ func moveFileGET(ctx *fiber.Ctx) error {
 		"message": "File moved",
 	})
 }
+
+func deleteFileDELETE(ctx *fiber.Ctx) error {
+	pathType := ctx.Params("pathtype")
+	filename := ctx.Params("filename")
+
+	if pathType != "local" && pathType != "usb" {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid pathtype",
+		})
+	}
+
+	if filename == "" {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid filename",
+		})
+	}
+
+	if kobrautils.CheckName(filename) {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": "Invalid filename",
+		})
+	}
+
+	// Delete the file
+	if pathType == "local" {
+		err := kobrautils.DeleteFile("local", filename)
+		if err != nil {
+			slog.Error("DeleteFile", "err", err.Error())
+			return ctx.Status(500).JSON(fiber.Map{
+				"error": "Error deleting file",
+			})
+		}
+	} else if pathType == "usb" {
+		err := kobrautils.DeleteFile("usb", filename)
+		if err != nil {
+			slog.Error("DeleteFile", "err", err.Error())
+			return ctx.Status(500).JSON(fiber.Map{
+				"error": "Error deleting file",
+			})
+		}
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"message": "File deleted",
+	})
+}
