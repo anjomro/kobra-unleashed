@@ -17,9 +17,10 @@ import ImagePreview from './ImagePreview.vue';
 
 const showInspectModal = ref(false);
 
-const ws = useUserStore().websock?.ws;
+const userStore = useUserStore();
 const printStore = usePrintStore();
 const fileList = computed(() => printStore.files);
+const ws = computed(() => userStore.websock);
 const isUsbConnected = computed(() => printStore.isUsbConnected);
 const selectedFile = ref<IFile | null>(null);
 const emit = defineEmits(['close', 'print']);
@@ -62,7 +63,7 @@ onBeforeMount(() => {
 });
 
 onBeforeUnmount(() => {
-  ws?.send(
+  ws.value?.ws?.send(
     JSON.stringify({
       action: 'stopWatchUSB',
     })
@@ -70,7 +71,7 @@ onBeforeUnmount(() => {
 });
 
 onMounted(async () => {
-  ws?.send(
+  ws.value?.ws?.send(
     JSON.stringify({
       action: 'watchUSB',
     })
