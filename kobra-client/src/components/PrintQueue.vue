@@ -8,7 +8,6 @@ import { onBeforeUnmount, onMounted, ref, watchEffect } from 'vue';
 const printStore = usePrintStore();
 
 const gcodePreview = ref<HTMLCanvasElement | undefined>(undefined);
-const displayCanvas = ref(false);
 
 // Make a function that calculates a color based on the progress red to green
 const calculateColor = (progress: number) => {
@@ -56,7 +55,7 @@ const resumePrintJob = async () => {
   }
 };
 
-let preview: WebGLPreview | undefined = undefined;
+let preview: WebGLPreview;
 
 const handleResize = () => {
   if (preview) {
@@ -68,17 +67,17 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
 });
 
-onMounted(() => {
+onMounted(async () => {
   watchEffect(async () => {
     // return if no print job progress or curr_layer return
 
     if (printJob.value?.filename) {
-      window.addEventListener('resize', handleResize);
       const response = await fetch(
         `/api/files/local/${printJob.value.filename}`
       );
       if (response.ok) {
         const gcode = await response.text();
+        window.addEventListener('resize', handleResize);
 
         if (
           printJob.value.progress === undefined ||
@@ -89,7 +88,6 @@ onMounted(() => {
 
         preview = init({
           canvas: gcodePreview.value,
-          extrusionColor: calculateColor(printJob.value.progress),
           initialCameraPosition: [200, 200, 200],
           renderTubes: true,
           buildVolume: {
@@ -102,15 +100,19 @@ onMounted(() => {
           },
         });
 
-        preview.endLayer = printJob.value.curr_layer;
-
         preview.processGCode(gcode);
-
         preview.render();
 
-        console.log('ok');
-
-        displayCanvas.value = true;
+        preview.endLayer = printJob.value.curr_layer;
+        preview.extrusionColor = calculateColor(printJob.value.progress);
+        preview.buildVolume = {
+          x: 410,
+          y: 400,
+          z: 400,
+          r: 400,
+          i: 400,
+          j: 400,
+        };
       }
     }
   });
@@ -119,13 +121,10 @@ onMounted(() => {
 
 <template>
   <div
-    class="w-full bg-neutral-200 dark:bg-neutral-700 p-4 rounded-lg flex flex-col gap-y-2"
+    class="w-full flex-1 bg-neutral-200 dark:bg-neutral-700 p-4 rounded-lg flex flex-col gap-y-2"
     v-if="printJob?.filename"
   >
-    <div class="flex justify-between items-center">
-      <h2 class="text-lg font-bold">Print Queue</h2>
-    </div>
-    <div class="flex flex-col gap-y-2">
+    <div class="flex flex-col gap-y-2 flex-1">
       <div class="flex justify-between items-center">
         <h3 class="text-lg font-bold">Current Print Job</h3>
         <div class="flex gap-x-2">
@@ -164,11 +163,7 @@ onMounted(() => {
             </div>
           </div>
         </div>
-        <canvas
-          v-show="displayCanvas"
-          ref="gcodePreview"
-          class="w-full h-[20rem] rounded-lg"
-        ></canvas>
+        <canvas ref="gcodePreview" class="w-full h-[20rem] rounded-lg"></canvas>
       </div>
     </div>
   </div>
