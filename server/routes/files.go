@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"bufio"
 	"fmt"
 	"log/slog"
 	"net/url"
@@ -165,19 +166,39 @@ func getFileGET(ctx *fiber.Ctx) error {
 		})
 	}
 
+	defer file.Close()
+
 	// Set the content type to application/octet-stream
-	ctx.Set("Content-Type", "application/octet-stream")
+	ctx.Set(fiber.HeaderContentType, fiber.MIMEOctetStream)
 
-	// Read the file chunk by chunk and stream it to the client
-	for {
-		n, err := file.Read(buff)
-		if err != nil {
-			break
+	ctx.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+
+		for {
+			// Read the file into the buffer
+			n, err := file.Read(buff)
+			if err != nil {
+				break
+			}
+
+			if n == 0 {
+				break
+			}
+
+			// Write the buffer to the response
+			_, err = w.Write(buff[:n])
+			if err != nil {
+				break
+			}
+
+			// Flush the buffer
+			err = w.Flush()
+			if err != nil {
+				break
+			}
 		}
-		ctx.Write(buff[:n])
-	}
+	})
 
-	return nil
+	return ctx.SendStatus(200)
 }
 
 func moveFileGET(ctx *fiber.Ctx) error {

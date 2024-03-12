@@ -6,7 +6,6 @@ import {
   IPrinterFiles,
   PrinterState,
 } from '@/interfaces/printer';
-import * as GCodePreview from 'gcode-preview';
 
 export const usePrintStore = defineStore('printer', () => {
   const printJob = ref<IPrintJob>({});
@@ -15,10 +14,12 @@ export const usePrintStore = defineStore('printer', () => {
   const isUsbConnected = ref<boolean>(false);
 
   const printFile = (file: IFile | undefined) => {
-    // Send filename to printer
+    console.log('Printing file', file);
   };
 
   const moveFileUp = async (file: IFile | undefined) => {
+    // Find file in list and move it to local by changing the path
+
     // Move file to local
     const response = await fetch(
       `/api/files/${file?.path}/${file?.name}/local`,
@@ -28,9 +29,7 @@ export const usePrintStore = defineStore('printer', () => {
       }
     );
 
-    if (response.ok) {
-      console.log('File moved to local');
-    } else {
+    if (!response.ok) {
       console.error('Error moving file to local');
     }
 
@@ -38,15 +37,15 @@ export const usePrintStore = defineStore('printer', () => {
   };
 
   const moveFileDown = async (file: IFile | undefined) => {
+    // Find file in list and move it to usb by changing the path
+
     // Move file to usb
     const response = await fetch(`/api/files/${file?.path}/${file?.name}/usb`, {
       // Get
       method: 'GET',
     });
 
-    if (response.ok) {
-      console.log('File moved to usb');
-    } else {
+    if (!response.ok) {
       console.error('Error moving file to usb');
     }
 
@@ -83,18 +82,20 @@ export const usePrintStore = defineStore('printer', () => {
   const getFiles = async () => {
     const response = await fetch('/api/files');
     const data: IPrinterFiles = await response.json();
+
     files.value = data;
   };
+
   return {
     printJob,
     printStatus,
     files,
+    isUsbConnected,
     printFile,
     moveFileUp,
     moveFileDown,
     deleteFile,
     getFiles,
     downloadFile,
-    isUsbConnected,
   };
 });
