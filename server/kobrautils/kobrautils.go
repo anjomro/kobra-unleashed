@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -188,8 +189,8 @@ func ListFiles() ([]File, error) {
 		return nil, err
 	}
 
-	// Check if /mnt/exUDISK exists
-	if _, err := os.Stat("/mnt/exUDISK"); err == nil {
+	// Check if /mnt/exUDISK exists using the errisnotexist function
+	if _, err := os.Stat("/mnt/exUDISK"); !os.IsNotExist(err) {
 		usbFiles, err := os.ReadDir("/mnt/exUDISK")
 		if err != nil {
 			return nil, err
@@ -237,4 +238,14 @@ func ListFiles() ([]File, error) {
 func UrlDecode(s string) (string, error) {
 	// Query escape the string
 	return url.QueryUnescape(s)
+}
+
+func SetupGCron() {
+	// Start the garbage collection cron job
+	// Every 10 seconds
+	// debug.runGC()
+	for {
+		time.Sleep(10 * time.Second)
+		debug.FreeOSMemory()
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/anjomro/kobra-unleashed/server/kobrautils"
 	"github.com/anjomro/kobra-unleashed/server/mqtt"
 	"github.com/anjomro/kobra-unleashed/server/routes"
 	"github.com/anjomro/kobra-unleashed/server/sess"
@@ -42,7 +43,10 @@ func main() {
 
 	appPort := utils.GetEnv("APP_PORT", "80")
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ServerHeader: "Kobra-Unleashed",
+		AppName:      "Kobra-Unleashed",
+	})
 
 	app.Use(slogfiber.New(logger))
 
@@ -58,6 +62,8 @@ func main() {
 	mqtt.SubscribeToPrinter()
 
 	websocket.SetupWebsocket()
+
+	go kobrautils.SetupGCron()
 
 	app.Static("/", "/www")
 
