@@ -131,7 +131,10 @@ onMounted(async () => {
             <p class="text-sm">{{ convertTimestamp(localfile.modified_at) }}</p>
             <div class="files-container">
               <div class="flex gap-x-2">
-                <button class="btn btn-primary">
+                <button
+                  class="btn btn-primary"
+                  @click="printStore.printFile(localfile)"
+                >
                   <PrintIcon class="w-6 h-6" />
                 </button>
                 <button
@@ -190,7 +193,10 @@ onMounted(async () => {
             <p class="text-sm">{{ convertTimestamp(usbfile.modified_at) }}</p>
 
             <div class="flex gap-x-2">
-              <button class="btn btn-primary">
+              <button
+                class="btn btn-primary"
+                @click="printStore.printFile(usbfile)"
+              >
                 <PrintIcon class="w-6 h-6" />
               </button>
               <button

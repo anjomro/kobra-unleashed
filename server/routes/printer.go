@@ -115,7 +115,7 @@ func PrintHandler(c *fiber.Ctx) error {
 		// Get the filename
 		filename := c.FormValue("file")
 		if filename == "" {
-			return c.Status(400).JSON(fiber.Map{"error": "No file uploaded"})
+			return c.Status(400).JSON(fiber.Map{"error": "No file name provided"})
 		}
 
 		if kobrautils.CheckName(filename) {
