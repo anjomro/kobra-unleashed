@@ -210,9 +210,9 @@ if (ws) {
     } else if (mqttResponse.type === 'print') {
       const printUpdate = mqttResponse as PrintUpdate;
       if (mqttResponse.action === 'start') {
-        printStore.$patch({
-          printJob: printUpdate.data,
-          printStatus: printUpdate,
+        printStore.$patch((state) => {
+          state.printStatus.state = printUpdate.state;
+          state.printJob = printUpdate.data;
         });
       } else if (mqttResponse.action === 'stop') {
         printStore.$patch((state) => {
