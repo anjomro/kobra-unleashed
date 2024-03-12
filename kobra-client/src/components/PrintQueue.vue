@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MqttResponse } from '@/interfaces/mqtt';
+import { MqttResponse, PrintUpdate } from '@/interfaces/mqtt';
 import { usePrintStore } from '@/stores/printer';
 import { useUserStore } from '@/stores/store';
 import { computed } from 'vue';
@@ -21,7 +21,10 @@ ws?.addEventListener('message', (e) => {
 
   if (mqttResponse.type === 'print') {
     if (mqttResponse.action) {
-      printStore.$patch({ printStatus: mqttResponse.data });
+      const printUpdate: PrintUpdate = mqttResponse;
+      printStore.$patch((state) => {
+        state.printStatus = printUpdate;
+      });
     }
   }
 });

@@ -4,16 +4,16 @@
 
 import { IPrintJob, PrinterState, IFile } from '@/interfaces/printer';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
 
 export const usePrintStore = defineStore('printer', {
   // arrow function recommended for full type inference
   state: () => ({
-    printJob: ref<IPrintJob>({}),
-    printStatus: ref<PrinterState>({}),
-    files: ref<IFile[]>([]),
-    isUsbConnected: ref<boolean>(false),
+    printJob: {} as IPrintJob,
+    printStatus: {} as PrinterState,
+    files: [] as IFile[],
+    isUsbConnected: false as boolean,
   }),
+
   getters: {
     getFileList: (state) => {
       return state.files;
