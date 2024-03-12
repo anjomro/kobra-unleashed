@@ -10,7 +10,7 @@ export const usePrintStore = defineStore('printer', {
   // arrow function recommended for full type inference
   state: () => ({
     printJob: ref<IPrintJob>({}),
-    printStatus: ref<PrinterState | null>(null),
+    printStatus: ref<PrinterState>({}),
     files: ref<IFile[]>([]),
     isUsbConnected: ref<boolean>(false),
   }),

@@ -167,3 +167,56 @@ func PrintHandler(c *fiber.Ctx) error {
 		}
 	}
 }
+
+func CancelPrintHandler(c *fiber.Ctx) error {
+	taskid := c.Params("taskid")
+	if taskid == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "No taskid provided"})
+	}
+	// Cancel the print
+	err := kobraprinter.CancelPrint(taskid)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	} else {
+		return c.SendStatus(200)
+	}
+}
+
+func PausePrintHandler(c *fiber.Ctx) error {
+	taskid := c.Params("taskid")
+	if taskid == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "No taskid provided"})
+	}
+	// Pause the print
+	err := kobraprinter.PausePrint(taskid)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	} else {
+		return c.SendStatus(200)
+	}
+}
+
+func ResumePrintHandler(c *fiber.Ctx) error {
+	taskid := c.Params("taskid")
+	if taskid == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "No taskid provided"})
+	}
+	// Resume the print
+	err := kobraprinter.ResumePrint(taskid)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	} else {
+		return c.SendStatus(200)
+	}
+}
+
+func PrintQueryHandler(c *fiber.Ctx) error {
+	// Query the printer for the print status
+	payld := kobrautils.NewMqttPayload("print", "query", nil)
+	err := mqtt.SendCommand(payld, "print")
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	} else {
+		return c.SendStatus(200)
+	}
+}
