@@ -8,85 +8,76 @@ interface IWebSocket {
   pingInterval: number | null;
 }
 
-export const useUserStore = defineStore('user', () => {
-  const auth = useStorage<boolean>('auth', false);
-  const authExpiryDate = useStorage<number>('authExpiryDate', 0);
-  const websock = ref<IWebSocket | null>(null);
-  const username = ref('N/A');
-  const router = useRouter();
-  const isDev = import.meta.env.DEV;
-  const wsURL = isDev
-    ? 'ws://localhost:3000/ws/info'
-    : 'ws://localhost/ws/info';
+const isDev = import.meta.env.DEV;
 
-  // Make onlogout callback that takes in a websocket and closes it
-
-  const createWebSocket = () => {
-    const ws = new WebSocket(wsURL);
-    registerWebSocket(ws);
-  };
-
-  const registerWebSocket = (ws: WebSocket) => {
-    // Ping server every 20 seconds to keep connection alive
-    const pingInterval = setInterval(() => {
-      if (ws.readyState === ws.OPEN) {
-        ws.send('ping');
-      } else {
-        clearInterval(pingInterval);
-      }
-      console.log('Ping sent');
-    }, 20000);
-
-    ws.addEventListener('close', (e) => {
-      // Reconnect if the connection is closed for unexpected reasons
-      if (e.code !== 1000) {
-        console.log('Websocket closed unexpectedly, reconnecting');
-        if (auth.value) registerWebSocket(new WebSocket(wsURL));
-      }
-    });
-
-    // Set the websocket and pingInterval
-    websock.value = {
-      ws,
-      pingInterval,
+export const useUserStore = defineStore('user', {
+  // arrow function recommended for full type inference
+  state: () => {
+    return {
+      auth: useStorage<boolean>('auth', false),
+      authExpiryDate: useStorage<number>('authExpiryDate', 0),
+      websock: ref<IWebSocket | null>(null),
+      username: ref('N/A'),
+      router: useRouter(),
+      wsURL: isDev ? 'ws://localhost:3000/ws/info' : 'ws://localhost/ws/info',
     };
-  };
+  },
+  actions: {
+    createWebSocket() {
+      const ws = new WebSocket(this.wsURL);
+      this.registerWebSocket(ws);
+    },
+    registerWebSocket(ws: WebSocket) {
+      // Ping server every 20 seconds to keep connection alive
+      const pingInterval = setInterval(() => {
+        if (ws.readyState === ws.OPEN) {
+          ws.send('ping');
+        } else {
+          clearInterval(pingInterval);
+        }
+        console.log('Ping sent');
+      }, 20000);
 
-  async function logout() {
-    // Disconnect from ws server
+      ws.addEventListener('close', (e) => {
+        // Reconnect if the connection is closed for unexpected reasons
+        if (e.code !== 1000) {
+          console.log('Websocket closed unexpectedly, reconnecting');
+          if (this.auth) this.registerWebSocket(new WebSocket(this.wsURL));
+        }
+      });
 
-    if (websock.value) {
-      if (websock.value.pingInterval) {
-        clearInterval(websock.value.pingInterval);
+      // Set the websocket and pingInterval
+      this.websock = {
+        ws,
+        pingInterval,
+      };
+    },
+    async logout() {
+      // Disconnect from ws server
+
+      if (this.websock) {
+        if (this.websock.pingInterval) {
+          clearInterval(this.websock.pingInterval);
+        }
+
+        this.websock.ws.close();
+        console.log('Websocket closed');
       }
 
-      websock.value.ws.close();
-      console.log('Websocket closed');
-    }
+      await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
 
-    await fetch('/api/logout', {
-      method: 'POST',
-      credentials: 'include',
-    });
+      this.auth = false;
+      this.authExpiryDate = 0;
 
-    auth.value = false;
-    authExpiryDate.value = 0;
+      // Delete cookies
+      document.cookie =
+        'session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
 
-    // Delete cookies
-    document.cookie =
-      'session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-
-    // Redirect to login
-    router.replace({ name: 'Login', query: { logout: 'true' } });
-  }
-
-  return {
-    auth,
-    authExpiryDate,
-    username,
-    logout,
-    registerWebSocket,
-    websock,
-    createWebSocket,
-  };
+      // Redirect to login
+      this.router.replace({ name: 'Login', query: { logout: 'true' } });
+    },
+  },
 });

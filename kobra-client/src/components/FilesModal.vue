@@ -120,13 +120,13 @@ onMounted(async () => {
           <h2 class="text-lg font-bold p-2">Local</h2>
 
           <li
-            v-for="file in fileList.filter((f) => f.path === 'local')"
+            v-for="localfile in fileList.filter((f) => f.path === 'local')"
             class="files-container"
           >
-            <ImagePreview :file="file" />
-            <h2 class="text-lg font-bold">{{ file.name }}</h2>
-            <p class="text-sm">{{ convertSize(file.size) }}</p>
-            <p class="text-sm">{{ convertTimestamp(file.modified_at) }}</p>
+            <ImagePreview :file="localfile" />
+            <h2 class="text-lg font-bold">{{ localfile.name }}</h2>
+            <p class="text-sm">{{ convertSize(localfile.size) }}</p>
+            <p class="text-sm">{{ convertTimestamp(localfile.modified_at) }}</p>
             <div class="files-container">
               <div class="flex gap-x-2">
                 <button class="btn btn-primary">
@@ -136,7 +136,7 @@ onMounted(async () => {
                   class="btn btn-primary"
                   @click="
                     showInspectModal = true;
-                    selectedFile = file;
+                    selectedFile = localfile;
                   "
                 >
                   <ViewIcon class="w-6 h-6" />
@@ -144,19 +144,19 @@ onMounted(async () => {
                 <button
                   class="btn btn-primary"
                   :disabled="!isUsbConnected"
-                  @click="printStore.moveFileDown(file)"
+                  @click="printStore.moveFileDown(localfile)"
                 >
                   <ModeDownIcon class="w-6 h-6" />
                 </button>
                 <button
                   class="btn btn-primary"
-                  @click="printStore.downloadFile(file)"
+                  @click="printStore.downloadFile(localfile)"
                 >
                   <DownloadIcon class="w-6 h-6" />
                 </button>
                 <button
                   class="btn btn-hover-danger"
-                  @click="printStore.deleteFile(file)"
+                  @click="printStore.deleteFile(localfile)"
                 >
                   <DeleteIcon class="w-6 h-6" />
                 </button>
@@ -178,13 +178,13 @@ onMounted(async () => {
           <h2 class="text-lg font-bold p-2">USB</h2>
 
           <li
-            v-for="file in fileList.filter((f) => f.path === 'usb')"
+            v-for="usbfile in fileList.filter((f) => f.path === 'usb')"
             class="files-container"
           >
-            <ImagePreview :file="file" />
-            <h2 class="text-lg font-bold">{{ file.name }}</h2>
-            <p class="text-sm">{{ convertSize(file.size) }}</p>
-            <p class="text-sm">{{ convertTimestamp(file.modified_at) }}</p>
+            <ImagePreview :file="usbfile" />
+            <h2 class="text-lg font-bold">{{ usbfile.name }}</h2>
+            <p class="text-sm">{{ convertSize(usbfile.size) }}</p>
+            <p class="text-sm">{{ convertTimestamp(usbfile.modified_at) }}</p>
 
             <div class="flex gap-x-2">
               <button class="btn btn-primary">
@@ -194,26 +194,26 @@ onMounted(async () => {
                 class="btn btn-primary"
                 @click="
                   showInspectModal = true;
-                  selectedFile = file;
+                  selectedFile = usbfile;
                 "
               >
                 <ViewIcon class="w-6 h-6" />
               </button>
               <button
                 class="btn btn-primary"
-                @click="printStore.moveFileUp(file)"
+                @click="printStore.moveFileUp(usbfile)"
               >
                 <ModeUpIcon class="w-6 h-6" />
               </button>
               <button
                 class="btn btn-primary"
-                @click="printStore.downloadFile(file)"
+                @click="printStore.downloadFile(usbfile)"
               >
                 <DownloadIcon class="w-6 h-6" />
               </button>
               <button
                 class="btn btn-hover-danger"
-                @click="printStore.deleteFile(file)"
+                @click="printStore.deleteFile(usbfile)"
               >
                 <DeleteIcon class="w-6 h-6" />
               </button>
