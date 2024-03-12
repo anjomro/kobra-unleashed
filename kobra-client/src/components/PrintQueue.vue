@@ -112,7 +112,7 @@ onMounted(async () => {
       j: 400,
     };
 
-    preview.render();
+    preview.processGCode(gcodeFile.value);
   });
 });
 </script>
