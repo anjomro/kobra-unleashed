@@ -187,7 +187,7 @@ if (ws) {
 
     if (
       (mqttResponse.type === 'tempature' && mqttResponse.action === 'report') ||
-      mqttResponse.action === 'auto'
+      (mqttResponse.type === 'tempature' && mqttResponse.action === 'auto')
     ) {
       // Set mqttResponse to Temperature interface
       const temp: Temperature = mqttResponse;
@@ -202,8 +202,8 @@ if (ws) {
       });
     } else if (mqttResponse.type === 'fan' && mqttResponse.action === 'auto') {
       // PrinterState.value.fanSpeed = mqttResponse.data.fan_speed_pct;
-      printStore.$patch({
-        printStatus: { fanSpeed: mqttResponse.data.fan_speed_pct },
+      printStore.$patch((state) => {
+        state.printStatus.fanSpeed = mqttResponse.data.fan_speed_pct;
       });
     } else if (mqttResponse.type === 'print') {
       const printUpdate = mqttResponse as PrintUpdate;
