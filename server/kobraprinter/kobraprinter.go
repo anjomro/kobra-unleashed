@@ -11,6 +11,8 @@ import (
 	"github.com/anjomro/kobra-unleashed/server/structs"
 )
 
+type M map[string]interface{}
+
 // Map string interface short
 
 func ListFiles(pathType string, path string) error {
@@ -23,7 +25,7 @@ func ListFiles(pathType string, path string) error {
 		path = "/"
 	}
 
-	payld := kobrautils.NewMqttPayload("file", pathType, map[string]interface{}{"path": path})
+	payld := kobrautils.NewMqttPayload("file", pathType, M{"path": path})
 
 	err := mqtt.SendCommand(payld, "file")
 
@@ -34,22 +36,8 @@ func ListFiles(pathType string, path string) error {
 	}
 }
 
-//	{
-//		"type": "print",
-//		"action": "update",
-//		"data": {
-//		  "taskid": "0",
-//		  "settings": {
-//			"target_nozzle_temp": 0,
-//			"target_hotbed_temp": 0,
-//			"fan_speed_pct": 1,
-//			"print_speed_mode": 1
-//		  }
-//		}
-//	  }
-
 func UpdatePrintSettings(taskid string, settings structs.PrintSettings) error {
-	payld := kobrautils.NewMqttPayload("print", "update", map[string]interface{}{"taskid": taskid, "settings": settings})
+	payld := kobrautils.NewMqttPayload("print", "update", M{"taskid": taskid, "settings": settings})
 
 	err := mqtt.SendCommand(payld, "print")
 
@@ -68,13 +56,49 @@ func PrintFile(filename string) error {
 
 	taskid := r.Intn(1000000)
 
-	payld := kobrautils.NewMqttPayload("print", "start", map[string]interface{}{
+	payld := kobrautils.NewMqttPayload("print", "start", M{
 		"filename":  filename,
 		"filepath":  "/",
 		"taskid":    fmt.Sprintf("%d", taskid),
 		"task_mode": 1,
 		"filetype":  1,
 	})
+
+	err := mqtt.SendCommand(payld, "print")
+
+	if err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func CancelPrint(taskid string) error {
+	payld := kobrautils.NewMqttPayload("print", "stop", M{"taskid": taskid})
+
+	err := mqtt.SendCommand(payld, "print")
+
+	if err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func PausePrint(taskid string) error {
+	payld := kobrautils.NewMqttPayload("print", "pause", M{"taskid": taskid})
+
+	err := mqtt.SendCommand(payld, "print")
+
+	if err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func ResumePrint(taskid string) error {
+	payld := kobrautils.NewMqttPayload("print", "resume", M{"taskid": taskid})
 
 	err := mqtt.SendCommand(payld, "print")
 

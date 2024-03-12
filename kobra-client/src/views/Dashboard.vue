@@ -117,6 +117,7 @@ import { MqttResponse, PrintUpdate, Temperature } from '@/interfaces/mqtt';
 import { useUserStore } from '@/stores/store';
 import { ITempColor } from '@/interfaces/printer';
 import { onMounted, ref, watchEffect, Teleport } from 'vue';
+import { usePrintStore } from '@/stores/printer';
 import StatusCard from '@/components/StatusCard.vue';
 import EditParamPanel from '@/components/EditParamPanel.vue';
 import FilesModal from '@/components/FilesModal.vue';
@@ -126,7 +127,6 @@ import LogoutIcon from '~icons/carbon/logout';
 import FileIcon from '~icons/carbon/volume-file-storage';
 import PrintIcon from '~icons/cbi/3dprinter-standby';
 import SettingsIcon from '~icons/carbon/settings';
-import { usePrintStore } from '@/stores/printer';
 
 const userStore = useUserStore();
 const printStore = usePrintStore();
@@ -191,10 +191,7 @@ if (ws) {
     ) {
       // Set mqttResponse to Temperature interface
       const temp: Temperature = mqttResponse;
-      // PrinterState.value.currentBedTemp = temp.data.curr_hotbed_temp;
-      // PrinterState.value.currentNozzleTemp = temp.data.curr_nozzle_temp;
-      // PrinterState.value.targetBedTemp = temp.data.target_hotbed_temp;
-      // PrinterState.value.targetNozzleTemp = temp.data.target_nozzle_temp;
+
       printStore.$patch({
         printStatus: {
           currentBedTemp: temp.data.curr_hotbed_temp,
@@ -208,20 +205,18 @@ if (ws) {
       printStore.$patch({
         printStatus: { fanSpeed: mqttResponse.data.fan_speed_pct },
       });
-    } else if (
-      mqttResponse.type === 'print' &&
-      mqttResponse.action === 'update'
-    ) {
+    } else if (mqttResponse.type === 'print') {
       const temp: PrintUpdate = mqttResponse;
       printStore.$patch({
         printStatus: {
+          state: temp.state,
+          fanSpeed: temp.data.settings.fan_speed_pct,
           currentBedTemp: temp.data.curr_hotbed_temp,
           currentNozzleTemp: temp.data.curr_nozzle_temp,
           targetBedTemp: temp.data.settings.target_hotbed_temp,
           targetNozzleTemp: temp.data.settings.target_nozzle_temp,
-          fanSpeed: temp.data.settings.fan_speed_pct,
-          printSpeed: temp.data.settings.print_speed_mode,
           zComp: temp.data.settings.z_comp,
+          printSpeed: temp.data.settings.print_speed_mode,
         },
       });
     }
@@ -249,12 +244,14 @@ const handlePrint = async (file: File) => {
 
 // Get username
 onMounted(async () => {
-  const response = await fetch('/api/user');
+  let response = await fetch('/api/user');
   const data = await response.json();
   // get username if ok
   if (response.ok) {
     userStore.$patch({ username: data.username });
   }
+
+  await fetch('/api/print/query');
 
   watchEffect(() => {
     // Watch nozzle temp and change color from blue to green between 0 and target temp

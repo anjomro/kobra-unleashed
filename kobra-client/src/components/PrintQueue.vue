@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { MqttResponse } from '@/interfaces/mqtt';
-import { IPrintJob } from '@/interfaces/printer';
+import { usePrintStore } from '@/stores/printer';
 import { useUserStore } from '@/stores/store';
-import { ref } from 'vue';
+import { computed } from 'vue';
 
-const printState = ref<IPrintJob>({});
+const printStore = usePrintStore();
+
+const printJob = computed(() => printStore.printJob);
 
 const ws = useUserStore().websock?.ws;
 
@@ -18,34 +20,26 @@ ws?.addEventListener('message', (e) => {
   const mqttResponse: MqttResponse = JSON.parse(message);
 
   if (mqttResponse.type === 'print') {
-    switch (mqttResponse.action) {
-      case 'start':
-        printState.value = mqttResponse.data;
-        break;
-      case 'pause':
-        printState.value = mqttResponse.data;
-        break;
-      case 'resume':
-        printState.value = mqttResponse.data;
-        break;
-      case 'stop':
-        printState.value = mqttResponse.data;
-        break;
-      case 'done':
-        printState.value = mqttResponse.data;
-        break;
-
-      default:
-        break;
+    if (mqttResponse.action) {
+      printStore.$patch({ printStatus: mqttResponse.data });
     }
   }
 });
+
+const cancelPrintJob = async () => {
+  const response = await fetch(`/api/print/${printJob.value.taskid}/cancel`, {
+    method: 'POST',
+  });
+  if (response.ok) {
+    printStore.$patch({ printStatus: {} });
+  }
+};
 </script>
 
 <template>
   <div
     class="w-full bg-neutral-200 dark:bg-neutral-700 p-4 rounded-lg flex flex-col gap-y-2"
-    v-if="printState.filename"
+    v-if="printJob.taskid"
   >
     <div class="flex justify-between items-center">
       <h2 class="text-lg font-bold">Print Queue</h2>
@@ -53,24 +47,29 @@ ws?.addEventListener('message', (e) => {
     <div class="flex flex-col gap-y-2">
       <div class="flex justify-between items-center">
         <h3 class="text-lg font-bold">Current Print Job</h3>
-        <button class="p-2 rounded-md bg-primary-500 text-white">Cancel</button>
+        <button
+          @click="cancelPrintJob"
+          class="p-2 rounded-md bg-primary-500 text-white"
+        >
+          Cancel
+        </button>
       </div>
       <div class="flex flex-col gap-y-2">
         <div class="flex justify-between items-center">
           <p class="text-lg font-bold">File Name</p>
-          <p>{{ printState.filename }}</p>
+          <p>{{ printJob.filename }}</p>
         </div>
         <div class="flex justify-between items-center">
           <p class="text-lg font-bold">Progress</p>
-          <p>{{ printState.progress }}%</p>
+          <p>{{ printJob.progress }}%</p>
         </div>
         <div class="flex justify-between items-center">
           <p class="text-lg font-bold">Time Remaining</p>
-          <p>{{ printState.remain_time }}</p>
+          <p>{{ printJob.remain_time }}</p>
         </div>
         <div class="flex justify-between items-center">
           <p class="text-lg font-bold">Time Elapsed</p>
-          <p>{{ printState.progress }}</p>
+          <p>{{ printJob.progress }}</p>
         </div>
       </div>
     </div>
