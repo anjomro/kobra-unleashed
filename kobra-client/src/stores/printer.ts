@@ -20,22 +20,6 @@ export const usePrintStore = defineStore('printer', {
     },
   },
   actions: {
-    async printFile(file: IFile) {
-      const formData = new FormData();
-      formData.append('upload', 'false');
-      formData.append('file', file.name);
-      formData.append('copy', file.path === 'usb' ? 'true' : 'false');
-
-      const response = await fetch('/api/print', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        console.error('Error printing file');
-      }
-    },
-
     async moveFileUp(file: IFile) {
       // Find file in list and move it to local by changing the path
 

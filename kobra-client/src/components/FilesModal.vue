@@ -58,6 +58,22 @@ const handleDrop = async (e: DragEvent, path: string) => {
   }
 };
 
+const printFile = async (file: IFile) => {
+  const formData = new FormData();
+  formData.append('upload', 'false');
+  formData.append('file', file.name);
+  formData.append('copy', file.path === 'usb' ? 'true' : 'false');
+
+  const response = await fetch('/api/print', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    console.error('Error printing file');
+  }
+};
+
 onBeforeMount(() => {
   printStore.getFiles();
 });
@@ -133,7 +149,8 @@ onMounted(async () => {
               <div class="flex gap-x-2">
                 <button
                   class="btn btn-primary"
-                  @click="printStore.printFile(localfile)"
+                  :disabled="printStore.printStatus.state !== 'free'"
+                  @click="printFile(localfile)"
                 >
                   <PrintIcon class="w-6 h-6" />
                 </button>
@@ -195,7 +212,8 @@ onMounted(async () => {
             <div class="flex gap-x-2">
               <button
                 class="btn btn-primary"
-                @click="printStore.printFile(usbfile)"
+                :disabled="printStore.printStatus.state !== 'free'"
+                @click="printFile(usbfile)"
               >
                 <PrintIcon class="w-6 h-6" />
               </button>

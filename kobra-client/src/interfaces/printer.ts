@@ -1,12 +1,12 @@
 export interface PrinterState {
-  state?: string;
-  currentNozzleTemp?: number;
-  currentBedTemp?: number;
-  targetNozzleTemp?: number;
-  targetBedTemp?: number;
-  fanSpeed?: number;
-  printSpeed?: number;
-  zComp?: string;
+  state: string;
+  currentNozzleTemp: number;
+  currentBedTemp: number;
+  targetNozzleTemp: number;
+  targetBedTemp: number;
+  fanSpeed: number;
+  printSpeed: number;
+  zComp: string;
 }
 
 export interface ITempColor {

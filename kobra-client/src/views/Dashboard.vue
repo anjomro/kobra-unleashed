@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { MqttResponse, Temperature } from '@/interfaces/mqtt';
+import { MqttResponse, PrintUpdate, Temperature } from '@/interfaces/mqtt';
 import { useUserStore } from '@/stores/store';
 import { ITempColor } from '@/interfaces/printer';
 import { onMounted, ref, watchEffect, Teleport } from 'vue';
@@ -205,6 +205,16 @@ if (ws) {
       printStore.$patch({
         printStatus: { fanSpeed: mqttResponse.data.fan_speed_pct },
       });
+    } else if (mqttResponse.type === 'print') {
+      const printUpdate = mqttResponse as PrintUpdate;
+      if (mqttResponse.action === 'start') {
+        console.log('Print started');
+        printStore.$patch({ printJob: printUpdate.data });
+      } else if (mqttResponse.action === 'stop') {
+        console.log('Print stopped');
+
+        printStore.$patch({ printJob: {} });
+      }
     }
   });
 }
@@ -323,11 +333,15 @@ onMounted(async () => {
           break;
         case 'preheating':
           // Orange
+          tempColor.value.status = 'rgb(100, 0, 100)';
+          break;
+        case 'stopping':
+          // Orange
           tempColor.value.status = 'rgb(100, 50, 0)';
           break;
         case 'printing':
           // Purple
-          tempColor.value.status = 'rgb(100, 0, 100)';
+          tempColor.value.status = 'rgb(0, 0, 100)';
           break;
         case 'free':
           tempColor.value.status = 'rgb(0, 100, 0)';

@@ -124,6 +124,11 @@ func CopyFile(src string, dst string) error {
 
 func DeleteFile(pathType, filename string) error {
 
+	filename, err := UrlDecode(filename)
+	if err != nil {
+		return fmt.Errorf("error decoding filename")
+	}
+
 	if strings.HasPrefix(filename, ".") || strings.HasSuffix(filename, ".") || strings.Contains(filename, "..") || strings.Contains(filename, "/") || strings.Contains(filename, "\\") || strings.Contains(filename, "./") || strings.Contains(filename, ".\\") {
 		return fmt.Errorf("invalid filename")
 	}

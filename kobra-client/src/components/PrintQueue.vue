@@ -1,40 +1,19 @@
 <script setup lang="ts">
-import { MqttResponse, PrintUpdate } from '@/interfaces/mqtt';
 import { usePrintStore } from '@/stores/printer';
-import { useUserStore } from '@/stores/store';
-import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 
 const printStore = usePrintStore();
 
-const printJob = computed(() => printStore.printJob);
-
-const ws = useUserStore().websock?.ws;
-
-ws?.addEventListener('message', (e) => {
-  if (e.data === 'pong') {
-    return;
-  }
-  const data = JSON.parse(e.data);
-  const message = atob(data.message);
-
-  const mqttResponse: MqttResponse = JSON.parse(message);
-
-  if (mqttResponse.type === 'print') {
-    if (mqttResponse.action) {
-      const printUpdate: PrintUpdate = mqttResponse;
-      printStore.$patch((state) => {
-        state.printStatus = printUpdate;
-      });
-    }
-  }
-});
+const { printJob } = storeToRefs(printStore);
 
 const cancelPrintJob = async () => {
   const response = await fetch(`/api/print/${printJob.value.taskid}/cancel`, {
     method: 'POST',
   });
   if (response.ok) {
-    printStore.$patch({ printStatus: {} });
+    printStore.$patch((state) => {
+      state.printJob = {};
+    });
   }
 };
 </script>
@@ -42,7 +21,7 @@ const cancelPrintJob = async () => {
 <template>
   <div
     class="w-full bg-neutral-200 dark:bg-neutral-700 p-4 rounded-lg flex flex-col gap-y-2"
-    v-if="printJob.taskid"
+    v-if="printJob.filename"
   >
     <div class="flex justify-between items-center">
       <h2 class="text-lg font-bold">Print Queue</h2>
@@ -50,12 +29,7 @@ const cancelPrintJob = async () => {
     <div class="flex flex-col gap-y-2">
       <div class="flex justify-between items-center">
         <h3 class="text-lg font-bold">Current Print Job</h3>
-        <button
-          @click="cancelPrintJob"
-          class="p-2 rounded-md bg-primary-500 text-white"
-        >
-          Cancel
-        </button>
+        <button @click="cancelPrintJob" class="btn btn-danger">Cancel</button>
       </div>
       <div class="flex flex-col gap-y-2">
         <div class="flex justify-between items-center">
