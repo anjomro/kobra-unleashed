@@ -110,14 +110,9 @@ func SetupWebsocket() {
 	})
 
 	socketio.On(socketio.EventDisconnect, func(ep *socketio.EventPayload) {
-		ep.Kws.Close()
 		// Remove client id from clients
 		delete(clients, ep.Kws.UUID)
 	})
-
-	type jsonError struct {
-		Error string `json:"error"`
-	}
 
 	socketio.On(socketio.EventMessage, func(ep *socketio.EventPayload) {
 		// If ping received, send pong
