@@ -7,13 +7,14 @@ const printStore = usePrintStore();
 const { printJob } = storeToRefs(printStore);
 
 const cancelPrintJob = async () => {
+  if (!printJob.value) {
+    return;
+  }
   const response = await fetch(`/api/print/${printJob.value.taskid}/cancel`, {
     method: 'POST',
   });
-  if (response.ok) {
-    printStore.$patch((state) => {
-      state.printJob = {};
-    });
+  if (!response.ok) {
+    console.error('Error canceling print job');
   }
 };
 </script>
@@ -21,7 +22,7 @@ const cancelPrintJob = async () => {
 <template>
   <div
     class="w-full bg-neutral-200 dark:bg-neutral-700 p-4 rounded-lg flex flex-col gap-y-2"
-    v-if="printJob.filename"
+    v-if="printJob?.filename"
   >
     <div class="flex justify-between items-center">
       <h2 class="text-lg font-bold">Print Queue</h2>
