@@ -18,16 +18,13 @@ interface MqttTempatureData {
 
 interface MqttPrintUpdateData {
   taskid: string;
-  localtask: string;
-  curr_hotbed_temp: number;
-  curr_nozzle_temp: number;
-  settings: {
-    target_nozzle_temp: number;
-    target_hotbed_temp: number;
-    fan_speed_pct: number;
-    print_speed_mode: number;
-    z_comp: string;
-  };
+  filename: string;
+  print_time: number;
+  progress: number;
+  supplies_usage: number;
+  total_layers: number;
+  curr_layer: number;
+  remain_time: number;
 }
 
 // Temperature interface that extends the MqttResponse interface

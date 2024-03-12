@@ -21,13 +21,13 @@ export interface ITempColor {
 
 export interface IPrintJob {
   taskid?: string;
-  remain_time?: number;
   filename?: string;
   print_time?: number;
   progress?: number;
   supplies_usage?: number;
   total_layers?: number;
   curr_layer?: number;
+  remain_time?: number;
 }
 
 export interface IFile {
