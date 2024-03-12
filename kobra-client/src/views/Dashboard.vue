@@ -209,11 +209,20 @@ if (ws) {
       const printUpdate = mqttResponse as PrintUpdate;
       if (mqttResponse.action === 'start') {
         console.log('Print started');
-        printStore.$patch({ printJob: printUpdate.data });
+        printStore.$patch({
+          printJob: printUpdate.data,
+          printStatus: printUpdate,
+        });
       } else if (mqttResponse.action === 'stop') {
         console.log('Print stopped');
 
-        printStore.$patch({ printJob: {} });
+        printStore.$patch((state) => {
+          state.printStatus.state = printUpdate.state;
+        });
+
+        if (printUpdate.state === 'stoped') {
+          printStore.$patch({ printJob: {} });
+        }
       }
     }
   });

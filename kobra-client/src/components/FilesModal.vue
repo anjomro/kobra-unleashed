@@ -149,7 +149,7 @@ onMounted(async () => {
               <div class="flex gap-x-2">
                 <button
                   class="btn btn-primary"
-                  :disabled="printStore.printStatus.state !== 'free'"
+                  :disabled="printStore.printStatus?.state !== 'free'"
                   @click="printFile(localfile)"
                 >
                   <PrintIcon class="w-6 h-6" />
@@ -212,7 +212,7 @@ onMounted(async () => {
             <div class="flex gap-x-2">
               <button
                 class="btn btn-primary"
-                :disabled="printStore.printStatus.state !== 'free'"
+                :disabled="printStore.printStatus?.state !== 'free'"
                 @click="printFile(usbfile)"
               >
                 <PrintIcon class="w-6 h-6" />
