@@ -57,8 +57,13 @@ onMounted(async () => {
         </button>
       </div>
       <div class="flex flex-col h-[90%] overflow-y-auto gap-y-2">
-        <p>File content</p>
-        <div class="h-full" ref="editorRef"></div>
+        <div v-show="data.length" class="h-full" ref="editorRef"></div>
+        <div
+          v-if="!data.length"
+          class="flex items-center justify-center h-full"
+        >
+          <p>No data to display</p>
+        </div>
       </div>
     </div>
   </div>
