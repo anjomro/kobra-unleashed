@@ -24,7 +24,7 @@ func SetupRoutes(app *fiber.App) {
 
 	app.Post("/api/login", LoginHandler).Post("/api/logout", middleware.AuthHandler, LogoutHandler)
 
-	// Create a api with base path /api
+	// Create a api with base path /api and protect it with the middleware
 	api := app.Group("/api").Use(middleware.AuthHandler)
 
 	api.Get("/version", versionHandler)
@@ -34,8 +34,8 @@ func SetupRoutes(app *fiber.App) {
 	api.Get("/printer/status", GetPrinterStatusHandler)
 	api.Get("/printer/log", GetLogHandler)
 
-	filehandler := api.Group("/files")
 	// /api/files/
+	filehandler := api.Group("/files")
 	filehandler.Post("/local", localFilesHandlerPOST)
 	filehandler.Post("/sdcard", sdcardFilesHandlerPOST)
 

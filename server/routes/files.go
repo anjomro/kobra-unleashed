@@ -3,6 +3,8 @@ package routes
 import (
 	"fmt"
 	"log/slog"
+	"net/url"
+	"os"
 	"strings"
 
 	"github.com/anjomro/kobra-unleashed/server/kobrautils"
@@ -96,6 +98,7 @@ func getFilesGET(ctx *fiber.Ctx) error {
 	return ctx.JSON(fiber.Map{
 		"files": files,
 	})
+
 }
 
 func getFileGET(ctx *fiber.Ctx) error {
@@ -103,6 +106,14 @@ func getFileGET(ctx *fiber.Ctx) error {
 	// Get ?pathType and ?path
 	pathType := ctx.Params("pathtype")
 	filename := ctx.Params("filename")
+
+	filename, err := url.QueryUnescape(filename)
+	if err != nil {
+		slog.Error("UrlDecode", "err", err.Error())
+		return ctx.Status(500).JSON(fiber.Map{
+			"error": "Error decoding filename",
+		})
+	}
 
 	// If pathType is not listLocal or listUdisk, return 400
 	if pathType != "local" && pathType != "usb" {
@@ -142,8 +153,31 @@ func getFileGET(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Send the file
-	return ctx.SendFile(path + filename)
+	// Make a buffer of 1kb
+	buff := make([]byte, 1024)
+
+	// Open the file
+	file, err := os.Open(path + filename)
+	if err != nil {
+		slog.Error("OpenFile", "err", err.Error())
+		return ctx.Status(500).JSON(fiber.Map{
+			"error": "Error opening file",
+		})
+	}
+
+	// Set the content type to application/octet-stream
+	ctx.Set("Content-Type", "application/octet-stream")
+
+	// Read the file chunk by chunk and stream it to the client
+	for {
+		n, err := file.Read(buff)
+		if err != nil {
+			break
+		}
+		ctx.Write(buff[:n])
+	}
+
+	return nil
 }
 
 func moveFileGET(ctx *fiber.Ctx) error {
