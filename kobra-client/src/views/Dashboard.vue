@@ -24,7 +24,7 @@
       >
         <button
           class="btn btn-primary icon"
-          :disabled="printStore.printStatus?.state !== 'free'"
+          :disabled="printStore.printStatus.state !== 'free'"
           @click="showNewPrintModal = true"
         >
           <PrintIcon class="w-8 h-8" />
@@ -33,7 +33,7 @@
         <button
           class="btn btn-primary icon"
           @click="showFilesModal = true"
-          v-if="printStore.printStatus?.state !== 'offline'"
+          v-if="printStore.printStatus.state !== 'offline'"
         >
           <FileIcon class="w-8 h-8" />
           <p>Files</p>
@@ -57,55 +57,55 @@
       <StatusCard
         title="Nozzle"
         :message="
-          printStore.printStatus?.currentNozzleTemp?.toString().concat(' °C')
+          printStore.printStatus.currentNozzleTemp?.toString().concat(' °C')
         "
         :displaysubmessage="true"
         :submessage="`Target: ${
-          printStore.printStatus?.targetNozzleTemp?.toString().concat(' °C') ??
+          printStore.printStatus.targetNozzleTemp?.toString().concat(' °C') ??
           'N/A'
         }`"
-        :bgcolor="tempColor?.nozzle"
+        :bgcolor="tempColor.nozzle"
       />
       <StatusCard
         title="Hotbed"
         :message="
-          printStore.printStatus?.currentBedTemp?.toString().concat(' °C')
+          printStore.printStatus.currentBedTemp?.toString().concat(' °C')
         "
         :displaysubmessage="true"
         :submessage="`Target: ${
-          printStore.printStatus?.targetBedTemp?.toString().concat(' °C') ??
+          printStore.printStatus.targetBedTemp?.toString().concat(' °C') ??
           'N/A'
         }`"
-        :bgcolor="tempColor?.bed"
+        :bgcolor="tempColor.bed"
       />
       <StatusCard
         title="Printer Status"
-        :message="printStore.printStatus?.state"
-        :bgcolor="tempColor?.status"
+        :message="printStore.printStatus.state"
+        :bgcolor="tempColor.status"
       />
       <StatusCard
         title="Speed Mode"
         :message="
-          printStore.printStatus?.printSpeed === 1
+          printStore.printStatus.printSpeed === 1
             ? 'Slow'
-            : printStore.printStatus?.printSpeed === 2
+            : printStore.printStatus.printSpeed === 2
             ? 'Normal'
-            : printStore.printStatus?.printSpeed === 3
+            : printStore.printStatus.printSpeed === 3
             ? 'Fast'
-            : printStore.printStatus?.printSpeed?.toString() ?? 'N/A'
+            : printStore.printStatus.printSpeed?.toString() ?? 'N/A'
         "
       />
       <StatusCard
         title="Fan Speed"
         :message="`${
-          printStore.printStatus?.fanSpeed?.toString().concat('%') ?? 'N/A'
+          printStore.printStatus.fanSpeed?.toString().concat('%') ?? 'N/A'
         }`"
-        :bgcolor="tempColor?.fan"
+        :bgcolor="tempColor.fan"
       />
       <StatusCard
         title="Z Compensation"
-        :message="printStore.printStatus?.zComp?.toString() ?? 'N/A'"
-        :bgcolor="tempColor?.zComp"
+        :message="printStore.printStatus.zComp?.toString() ?? 'N/A'"
+        :bgcolor="tempColor.zComp"
       />
     </div>
     <PrintQueue />
@@ -261,7 +261,7 @@ onMounted(async () => {
   watchEffect(() => {
     // Watch nozzle temp and change color from blue to green between 0 and target temp
     // const fanSpeed = PrinterState.value.fanSpeed;
-    const fanSpeed = printStore.printStatus?.fanSpeed;
+    const fanSpeed = printStore.printStatus.fanSpeed;
 
     if (fanSpeed !== undefined) {
       if (fanSpeed === 0) {
@@ -285,8 +285,8 @@ onMounted(async () => {
     // Nozzle. Blue to red gradient. If target temp is 0, set to blue
     // const nozzleTemp = PrinterState.value.currentNozzleTemp;
     // const targetNozzleTemp = PrinterState.value.targetNozzleTemp;
-    const nozzleTemp = printStore.printStatus?.currentNozzleTemp;
-    const targetNozzleTemp = printStore.printStatus?.targetNozzleTemp;
+    const nozzleTemp = printStore.printStatus.currentNozzleTemp;
+    const targetNozzleTemp = printStore.printStatus.targetNozzleTemp;
 
     if (nozzleTemp && targetNozzleTemp !== undefined) {
       if (targetNozzleTemp === 0) {
@@ -310,8 +310,8 @@ onMounted(async () => {
     // Bed. Blue to red gradient. If target temp is 0, set to blue
     // const bedTemp = PrinterState.value.currentBedTemp;
     // const targetBedTemp = PrinterState.value.targetBedTemp;
-    const bedTemp = printStore.printStatus?.currentBedTemp;
-    const targetBedTemp = printStore.printStatus?.targetBedTemp;
+    const bedTemp = printStore.printStatus.currentBedTemp;
+    const targetBedTemp = printStore.printStatus.targetBedTemp;
 
     if (bedTemp && targetBedTemp !== undefined) {
       if (targetBedTemp === 0) {
@@ -333,7 +333,7 @@ onMounted(async () => {
 
     // Printer status. Green for free, yellow for printing, red for error
     // const status = PrinterState.value.state;
-    const status = printStore.printStatus?.state;
+    const status = printStore.printStatus.state;
 
     if (status) {
       switch (status) {
@@ -364,7 +364,7 @@ onMounted(async () => {
     }
 
     // const zComp = PrinterState.value.zComp;
-    const zComp = printStore.printStatus?.zComp;
+    const zComp = printStore.printStatus.zComp;
 
     // Gradient from red to green
     if (zComp !== undefined) {
