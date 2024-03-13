@@ -211,8 +211,15 @@ func ResumePrintHandler(c *fiber.Ctx) error {
 }
 
 func PrintQueryHandler(c *fiber.Ctx) error {
+
+	// Get taskid from query
+	taskid := c.Params("taskid")
+	if taskid == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "No taskid provided"})
+	}
+
 	// Query the printer for the print status
-	payld := kobrautils.NewMqttPayload("print", "query", nil)
+	payld := kobrautils.NewMqttPayload("print", "query", fiber.Map{"taskid": taskid})
 	err := mqtt.SendCommand(payld, "print")
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})

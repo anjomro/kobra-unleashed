@@ -38,7 +38,7 @@ const doLogin = async () => {
     const data: LoginResponse = await response.json();
 
     userStore.$patch({ auth: true, authExpiryDate: data.expires });
-    router.push({ name: 'Dashboard' });
+    router.replace('/');
   } else {
     if (response.status === 401) {
       loginError.value = 'Invalid username or password';

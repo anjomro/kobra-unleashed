@@ -10,22 +10,20 @@ const routes: Array<RouteRecordRaw> = [
     meta: { requiresAuth: true },
     component: () => import('@/views/Dashboard.vue'),
   },
-  {
-    path: '/settings',
-    name: 'Settings',
-    meta: { requiresAuth: true },
-    component: () => import('@/views/Settings.vue'),
-  },
+  // {
+  //   path: '/settings',
+  //   name: 'Settings',
+  //   meta: { requiresAuth: true },
+  //   component: () => import('@/views/Settings.vue'),
+  // },
   {
     path: '/login',
     name: 'Login',
-    meta: { requiresAuth: false },
     component: () => import('@/views/Login.vue'),
   },
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    meta: { requiresAuth: false },
     component: () => import('@/views/NotFound.vue'),
   },
   // Add any other routes you have here
@@ -41,15 +39,15 @@ router.beforeEach((to, _from, next) => {
   const userStore = useUserStore();
 
   // If not logged in and not on the login page, redirect to login
-  if (!userStore.auth && to.meta.requiresAuth) {
-    next('/login');
+  if (!userStore.auth && to.meta.requiresAuth === true) {
+    return next('/login');
   }
   // If logged in and on the login page, redirect to dashboard
-  else if (userStore.auth && to.name === 'Login') {
-    next('/');
-  } else {
-    next();
+  else if (userStore.auth === true && to.name === 'Login') {
+    return next('/');
   }
+
+  next();
 });
 
 export default router;

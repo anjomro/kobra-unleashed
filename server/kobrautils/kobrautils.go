@@ -254,3 +254,36 @@ func SetupGCron() {
 		debug.FreeOSMemory()
 	}
 }
+
+func GetPrinterStatus() (*structs.PrintState, error) {
+	// Get the printer status
+	// Open /user/ac_print_state and read the json
+	file, err := os.ReadFile("/user/ac_print_state")
+	if err != nil {
+		return nil, fmt.Errorf("error reading printer state")
+	}
+
+	var printState structs.PrintState
+	err = json.Unmarshal(file, &printState)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling printer state")
+	}
+
+	return &printState, nil
+}
+
+func SetPrinterSettings(settings *structs.PrintSettings) error {
+	// Set the printer settings
+	// Write the json to /user/ac_print_settings
+	settingsJSON, err := json.Marshal(settings)
+	if err != nil {
+		return fmt.Errorf("error marshalling settings")
+	}
+
+	err = os.WriteFile("/user/ac_print_settings", settingsJSON, 0666)
+	if err != nil {
+		return fmt.Errorf("error writing settings")
+	}
+
+	return nil
+}

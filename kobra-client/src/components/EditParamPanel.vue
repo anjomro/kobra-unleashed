@@ -23,7 +23,7 @@ const newPrinterState = ref<PrinterState>({});
 
 const saveNewParams = async (newState: PrinterState) => {
   const tempPrinter: IPrinter = {
-    taskid: '0',
+    taskid: printState.printJob.taskid?.toString() || '0',
   };
 
   // Only set if not empty
