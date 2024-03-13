@@ -38,12 +38,7 @@
           <FileIcon class="w-8 h-8" />
           <p>Files</p>
         </button>
-        <RouterLink class="btn btn-primary icon" to="/settings">
-          <SettingsIcon class="w-8 h-8" />
-          <p>Settings</p>
-        </RouterLink>
-
-        <button class="btn icon btn-hover-danger" @click="userStore.logout">
+        <button class="btn icon btn-hover-danger" @click="logout">
           <LogoutIcon class="w-8 h-8" />
           <p>Logout</p>
         </button>
@@ -126,7 +121,9 @@ import PrintQueue from '@/components/PrintQueue.vue';
 import LogoutIcon from '~icons/carbon/logout';
 import FileIcon from '~icons/carbon/volume-file-storage';
 import PrintIcon from '~icons/cbi/3dprinter-standby';
-import SettingsIcon from '~icons/carbon/settings';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const userStore = useUserStore();
 const printStore = usePrintStore();
@@ -138,6 +135,32 @@ const tempColor = ref<ITempColor>({
   status: '',
   zComp: '',
 });
+
+const logout = () => {
+  if (userStore.websock) {
+    if (userStore.websock.pingInterval) {
+      clearInterval(userStore.websock.pingInterval);
+    }
+
+    userStore.websock.ws.close();
+    console.log('Websocket closed');
+  }
+
+  // Delete cookies
+  document.cookie =
+    'session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+
+  // Redirect to login
+
+  userStore.$patch({ username: '', auth: false, authExpiryDate: 0 });
+
+  router.replace({ path: '/login', query: { logout: 'true' } });
+
+  fetch('/api/logout', {
+    method: 'POST',
+    credentials: 'include',
+  });
+};
 
 userStore.createWebSocket();
 
@@ -260,7 +283,12 @@ onMounted(async () => {
     userStore.$patch({ username: data.username });
   }
 
-  await fetch('/api/print/query');
+  await fetch(
+    `/api/print/query/${printStore.printJob.taskid?.toString() ?? '0'}`,
+    {
+      method: 'GET',
+    }
+  );
 
   watchEffect(() => {
     // Watch nozzle temp and change color from blue to green between 0 and target temp

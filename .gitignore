@@ -1,6 +1,7 @@
 .idea
 uploads
 certs
-kobra-client/node_modules
-kobra-client/dist
-kobra-client/.vscode
+/kobra-client/node_modules
+/kobra-client/dist/*
+/kobra-client/.vscode
+/dist

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { useStorage } from '@vueuse/core';
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
 
 interface IWebSocket {
   ws: WebSocket;
@@ -17,7 +16,9 @@ export const useUserStore = defineStore('user', {
     authExpiryDate: useStorage<number>('authExpiryDate', 0),
     websock: ref<IWebSocket | null>(null),
     username: ref('N/A'),
-    wsURL: isDev ? 'ws://localhost:3000/ws/info' : 'ws://localhost/ws/info',
+    wsURL: isDev
+      ? 'ws://localhost:3000/ws/info'
+      : `ws://${location.host}/ws/info`,
   }),
   actions: {
     createWebSocket() {
@@ -37,7 +38,7 @@ export const useUserStore = defineStore('user', {
 
       ws.addEventListener('close', (e) => {
         // Reconnect if the connection is closed for unexpected reasons
-        if (e.code !== 1000) {
+        if (e.code !== 1006) {
           console.log('Websocket closed unexpectedly, reconnecting');
           if (this.auth) this.registerWebSocket(new WebSocket(this.wsURL));
         }
@@ -48,34 +49,6 @@ export const useUserStore = defineStore('user', {
         ws,
         pingInterval,
       };
-    },
-    async logout() {
-      // Disconnect from ws server
-
-      if (this.websock) {
-        if (this.websock.pingInterval) {
-          clearInterval(this.websock.pingInterval);
-        }
-
-        this.websock.ws.close();
-        console.log('Websocket closed');
-      }
-
-      await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      this.auth = false;
-      this.authExpiryDate = 0;
-
-      // Delete cookies
-      document.cookie =
-        'session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      const router = useRouter();
-
-      // Redirect to login
-      router.replace({ name: 'Login', query: { logout: 'true' } });
     },
   },
 });

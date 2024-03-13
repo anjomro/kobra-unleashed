@@ -29,7 +29,7 @@ func SetupRoutes(app *fiber.App) {
 
 	api.Get("/version", versionHandler)
 	api.Get("/user", GetUserInfo)
-	api.Post("/print", PrintHandler).Post("/print/:taskid/cancel", CancelPrintHandler).Post("/print/:taskid/pause", PausePrintHandler).Post("/print/:taskid/resume", ResumePrintHandler).Get("/print/query", PrintQueryHandler)
+	api.Post("/print", PrintHandler).Post("/print/:taskid/cancel", CancelPrintHandler).Post("/print/:taskid/pause", PausePrintHandler).Post("/print/:taskid/resume", ResumePrintHandler).Get("/print/query/:taskid", PrintQueryHandler)
 	api.Put("/printer/settings", SetPrinterSettingsHandler)
 	api.Get("/printer/status", GetPrinterStatusHandler)
 	api.Get("/printer/log", GetLogHandler)
