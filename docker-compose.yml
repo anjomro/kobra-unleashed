@@ -1,0 +1,9 @@
+version: "3"
+services:
+  kobra-unleashed:
+    ports:
+      - "8080:80"
+    restart: always
+    build:
+      context: .
+    container_name: kobra-unleashed
