@@ -22,7 +22,28 @@ func LoginHandler(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if !utils.CheckUser(user) {
+	// Check if static user is enabled
+	staticUserSuccessfulAuth := false
+
+	if utils.GetEnv("ENABLE_STATIC_USER", "false") == "true" {
+		staticUsername := utils.GetEnv("STATIC_USERNAME", "UNSET")
+		staticPassword := utils.GetEnv("STATIC_PASSWORD", "UNSET")
+		if staticUsername == "UNSET" || staticPassword == "UNSET" {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"message": "Static user enabled but not set, please set STATIC_USERNAME and STATIC_PASSWORD",
+			})
+		}
+		if user.Username == staticUsername && user.Password == staticPassword {
+			staticUserSuccessfulAuth = true
+		} else {
+			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"message": "Invalid username or password (static user enabled)",
+			})
+		}
+	}
+
+	// Check if user is either authenticated through credentials in shadow file or static user in env file
+	if !(utils.CheckUser(user) || staticUserSuccessfulAuth) {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"message": "Invalid username or password",
 		})
