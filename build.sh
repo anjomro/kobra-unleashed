@@ -26,6 +26,7 @@ fi
 
 # Copy dist to original directory /dist/frontend
 
+mkdir -p ../dist
 cp -r dist ../dist/frontend
 
 # Build the backend
