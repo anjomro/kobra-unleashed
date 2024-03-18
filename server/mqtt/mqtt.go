@@ -35,6 +35,7 @@ func NewTLSConfig() *tls.Config {
 	// Import trusted certificates from CAfile.pem.
 	// Alternatively, manually add CA certificates to
 	// default openssl CA bundle.
+
 	certpool := x509.NewCertPool()
 	pemCerts, err := os.ReadFile(utils.GetEnv("MQTT_CAFILE", "/user/ca.crt"))
 	if err == nil {
@@ -68,7 +69,9 @@ func GetMQTTClient() *MQTT.Client {
 		opts := MQTT.NewClientOptions()
 		opts.AddBroker(utils.GetEnv("MQTT_BROKER", "ssl://localhost:8883"))
 		opts.SetClientID(utils.GetEnv("MQTT_CLIENT_ID", "go-kobra-unleashed"))
-		opts.SetTLSConfig(NewTLSConfig())
+		if utils.GetEnv("USE_SSL", "true") == "true" {
+			opts.SetTLSConfig(NewTLSConfig())
+		}
 		opts.SetDefaultPublishHandler(f)
 		c := MQTT.NewClient(opts)
 		if token := c.Connect(); token.Wait() && token.Error() != nil {
