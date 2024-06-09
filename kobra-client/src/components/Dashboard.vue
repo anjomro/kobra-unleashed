@@ -75,7 +75,7 @@ export default {
     addPrinterName(id, name) {
       this.loadPrinterNames();
       this.printerNames[id] = name;
-      VueCookies.set('printerNames', this.printerNames);
+      VueCookies.set('printerNames', this.printerNames, Infinity);
     },
     resolvePrinterName(id) {
       if (!this.printerNames) {
