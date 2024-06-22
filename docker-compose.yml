@@ -14,6 +14,7 @@ services:
       - MQTT_HOST=eclipse-mosquitto
       - MQTT_PORT=8883
       - ROOT_URL=http://address-reachable-from-printer.com
+      #- NOTIFICATION_URL=
     container_name: kobra-unleashed
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/"]

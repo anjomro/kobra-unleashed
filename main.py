@@ -11,6 +11,8 @@ import json
 
 import eventlet
 
+import httpx
+
 import json
 from flask import Flask, render_template, send_from_directory, request
 import paho.mqtt.client as mqtt
@@ -26,6 +28,7 @@ ROOT_URL = os.getenv("ROOT_URL", "http://192.168.1.249:5000")
 app.config['SECRET'] = ''.join(random.choice(string.ascii_letters) for i in range(32))
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['NOTIFICATION_URL'] = os.getenv("NOTIFICATION_URL", "")
 app.config['MQTT_BROKER_URL'] = os.getenv("MQTT_HOST")
 app.config['MQTT_BROKER_PORT'] = int(os.getenv("MQTT_PORT", 8883))
 app.config['MQTT_CLIENT_ID'] = f'kobra-unleashed-{random.randint(0, 1000)}'
@@ -99,7 +102,13 @@ class Printer:
 
     def __init__(self, id: str):
         self.id = id
-        self.name = ""
+        printer_name_env = f"PRINTERNAME_{id}"
+        self.name = os.getenv(printer_name_env, "")
+        if self.name == "":
+            print(f"Set the following env variable to set the printer name:")
+            print(f"{printer_name_env}=MyPrinterName")
+        else:
+            print(f"Printer {self.name} ({self.id}) initialized")
         self.state = ""
         self.nozzle_temp = -1
         self.target_nozzle_temp = -1
@@ -203,11 +212,25 @@ class Printer:
             "files": self.files
         }
 
+    def get_nickname(self):
+        return self.name if self.name != "" else self.id[:5]
+
+
+def send_notification(message: str):
+    nf_url: str = app.config.get('NOTIFICATION_URL', "")
+    if nf_url.startswith("http"):
+        print(f"Sending notification: {message}")
+        httpx.post(nf_url, data=message)
+
 
 def status_message(printer: Printer, payload):
     # Update printer status
-    printer.state = payload["state"]
-    print(f"Printer {printer.id} status: {printer.state}")
+    changed = False
+    if printer.state != payload["state"]:
+        changed = True
+        printer.state = payload["state"]
+        print(f"Printer {printer.get_nickname()} status: {printer.state}")
+        send_notification(f"{printer.get_nickname()}: {printer.state}")
 
 
 def temperature_message(printer: Printer, payload):

@@ -9,6 +9,7 @@ flask = "*"
 flask-socketio = "*"
 eventlet = "*"
 gunicorn = "*"
+httpx = "*"
 
 [dev-packages]
 
