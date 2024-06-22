@@ -233,6 +233,16 @@ def status_message(printer: Printer, payload):
         send_notification(f"{printer.get_nickname()}: {printer.state}")
 
 
+def lastwill_message(printer: Printer, payload):
+    action = payload["action"]
+    if action == "onlineReport":
+        state = payload["state"]
+        if state != "online":
+            print(f"Printer {printer.get_nickname()}/state: {state} => offline")
+            payload["state"] = "offline"
+        status_message(printer, "offline")
+
+
 def temperature_message(printer: Printer, payload):
     # Update printer temperature
     printer.nozzle_temp = payload["data"]["curr_nozzle_temp"]
@@ -337,6 +347,8 @@ def parse_message(mqtt_client, userdata, message):
             file_message(this_printer, payload)
         elif type == "print":
             print_message(this_printer, payload)
+        elif type == "lastWill":
+            lastwill_message(this_printer, payload)
         else:
             print(f"Unknown message type: {type}/{action}")
     else:
