@@ -240,7 +240,7 @@ def lastwill_message(printer: Printer, payload):
         if state != "online":
             print(f"Printer {printer.get_nickname()}/state: {state} => offline")
             payload["state"] = "offline"
-        status_message(printer, "offline")
+        status_message(printer, payload)
 
 
 def temperature_message(printer: Printer, payload):
