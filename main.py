@@ -39,7 +39,6 @@ app.config['MQTT_TLS_CA_CERTS'] = os.getenv("MQTT_CA", "/app/certs/ca.pem")
 app.config['MQTT_TLS_CERTFILE'] = os.getenv("MQTT_CERT", "/app/certs/client.pem")
 app.config['MQTT_TLS_KEYFILE'] = os.getenv("MQTT_KEY", "/app/certs/client.key")
 app.config['MQTT_TLS_INSECURE'] = True
-# CORS_HOST = os.getenv("CORS_HOST", "http://127.0.0.1:5000")
 
 
 received_messages = []

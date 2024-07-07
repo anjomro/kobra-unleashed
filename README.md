@@ -1,4 +1,5 @@
 # Kobra Unleashed
+![](https://github.com/anjomro/kobra-unleashed/actions/workflows/docker-publish.yml/badge.svg)
 
 Since the Kobra 2 Pro/Plus/Max do not have a webinterface built-in, I decided to create one myself. This is the result.
 
@@ -20,10 +21,13 @@ webinterface are the result of reverse engineering.
 - Root shell access to your Printer
   - Refer to [the guide in this Readme](https://github.com/ultimateshadsform/Anycubic-Kobra-2-Series-Firmware)
 - A Linux Server
-  - Reachable by IPv4 from the printer
-  - Port 8883 has to be opened for MQTT(S)
-  - Another port of your choice for the Webinterface
-  - (Maybe it's possible to run this locally on something like a Raspberry Pi, but I haven't tested that yet)
+  - E.g. a Raspberry Pi or other Homeserver in your local network
+  - Can be a rented VPS
+    - Make sure to restrict access to the web interface when exposing it to the internet
+  - Technical Prerequisites:
+    - Reachable by IPv4 from the printer
+    - Port 8883 has to be opened for MQTT(S)
+    - Another port of your choice for the Webinterface
 
 ## Setup the printer
 - Clone this repository
@@ -66,8 +70,11 @@ webinterface are the result of reverse engineering.
 - Make sure you have Docker installed.
   - See [the official guide](https://docs.docker.com/desktop/install/linux-install/) for that.
 - Copy the repo and the certs to your server
-- Configure your address in the `docker-compose.yml`
-  - `CORS_HOST=http://your-host:5000` or whatever you want to use
+- Configure your server root url in the `docker-compose.yml`
+  - This is where you would access the server from.
+    - If you're running the server in your local network the address might look like this: (Remember to change the IP to the IP of the device running the kobra-unleashed server)
+    - `ROOT_URL=http://192.168.0.100:5000`
+  - Make sure the printer can reach this address, else uploading files won't work
 - Start the containers
   - `docker-compose up -d`
 - Using the default configuration, the webinterface should be reachable at `http://<your-server-ip>:5000`
