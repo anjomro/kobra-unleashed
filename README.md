@@ -19,7 +19,7 @@ webinterface are the result of reverse engineering.
 ## Prerequisites
 
 - Root shell access to your Printer
-  - Refer to [the guide in this Readme](https://github.com/ultimateshadsform/Anycubic-Kobra-2-Series-Firmware)
+  - Refer to [the guide in this Readme](https://web.archive.org/web/20240412214849/https://github.com/ultimateshadsform/Anycubic-Kobra-2-Series-Firmware)
 - A Linux Server
   - E.g. a Raspberry Pi or other Homeserver in your local network
   - Can be a rented VPS
